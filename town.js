@@ -174,7 +174,7 @@ function drawFruit(times) {
   const cost = drawCost() * times;
   if (S.money < cost) { log('金幣不足！','lose'); return; }
   S.money -= cost;
-  S.guild.questProgress.fruitDraw = (S.guild.questProgress.fruitDraw || 0) + times;
+  if (typeof addGuildProgress === 'function') addGuildProgress('fruitDraw', times);
   const results = [];
   for (let i = 0; i < times; i++) {
     const id = pickFruit();
