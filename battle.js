@@ -296,6 +296,11 @@ function playerAction(action) {
     if (isCrit) {
       S.combo++;
       if (S.combo > S.maxCombo) S.maxCombo = S.combo;
+      // ★ 公會連擊任務
+      if (typeof addGuildProgress === 'function') {
+        if (S.combo === 10) addGuildProgress('maxCombo10', 1);
+        if (S.combo === 30) addGuildProgress('maxCombo30', 1);
+      }
       checkAchievements();
     }
 
@@ -484,6 +489,7 @@ function onMonsterDefeated() {
   S.exp += totalExp;
   S.money += totalGold;
   S.killCount++;
+  if (typeof addGuildProgress === 'function') addGuildProgress('killCount', 1);  // ★ 公會任務
   log(`擊敗 ${m.name}！獲得 ${totalExp} 經驗與 ${totalGold} 金幣。`,'win');
 
   // 果實經驗
