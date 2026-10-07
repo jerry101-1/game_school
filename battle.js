@@ -313,6 +313,9 @@ function playerAction(action) {
     S.combo = 0;
   }
 
+    // ★ 寵物自動攻擊（30% 機率）
+  if (typeof petAutoAttack === 'function') petAutoAttack();
+
   renderBattleUI();
   if (m.hp <= 0) { m.hp = 0; renderBattleUI(); setTimeout(onMonsterDefeated, 400); return; }
   setTimeout(monsterTurn, 600);
