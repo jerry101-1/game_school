@@ -252,3 +252,140 @@ textarea { width:100%; height:120px; resize:vertical; }
 .menu-item .mi-icon { font-size: 26px; min-width: 32px; }
 .menu-item .mi-name { font-weight: bold; font-size: 15px; color: #4fc3f7; }
 .menu-item .mi-desc { font-size: 12px; color: #888; margin-top: 2px; }
+
+/* ══════════════════════════════════════════════════════
+   ★ 狀態區折疊
+   ══════════════════════════════════════════════════════ */
+
+.stat-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #1a1a25;
+  border: 1px solid #2a2a3a;
+  border-radius: 6px;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.15s;
+  margin-bottom: 8px;
+}
+.stat-header:hover {
+  background: #22223a;
+  border-color: #4fc3f7;
+}
+.stat-header-icon {
+  color: #4fc3f7;
+  font-size: 12px;
+  transition: transform 0.25s ease;
+  display: inline-block;
+  width: 12px;
+}
+.stat-header-title {
+  color: #4fc3f7;
+  font-weight: bold;
+  font-size: 13px;
+}
+.stat-header-hint {
+  color: #666;
+  font-size: 11px;
+  margin-left: auto;
+}
+
+.stat-body {
+  overflow: hidden;
+  transition: max-height 0.3s ease, opacity 0.25s ease, padding 0.25s ease;
+  max-height: 400px;
+  opacity: 1;
+  padding: 4px 0;
+}
+.stat-body.collapsed {
+  max-height: 0;
+  opacity: 0;
+  padding: 0;
+}
+
+/* ══════════════════════════════════════════════════════
+   ★ 畫面過渡動畫
+   ══════════════════════════════════════════════════════ */
+
+/* 每個 screen-* 加上淡入動畫 */
+[id^="screen-"] {
+  animation: screenFadeIn 0.3s ease;
+}
+
+@keyframes screenFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* 子選單項目滑入動畫 */
+.menu-item {
+  animation: menuSlideIn 0.3s ease backwards;
+}
+.menu-item:nth-child(1) { animation-delay: 0.05s; }
+.menu-item:nth-child(2) { animation-delay: 0.10s; }
+.menu-item:nth-child(3) { animation-delay: 0.15s; }
+.menu-item:nth-child(4) { animation-delay: 0.20s; }
+.menu-item:nth-child(5) { animation-delay: 0.25s; }
+
+@keyframes menuSlideIn {
+  from { opacity: 0; transform: translateX(-12px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* 大按鈕的彈跳進場 */
+.town-btn {
+  animation: buttonPop 0.35s ease backwards;
+}
+.town-btn:nth-child(1) { animation-delay: 0.05s; }
+.town-btn:nth-child(2) { animation-delay: 0.10s; }
+.town-btn:nth-child(3) { animation-delay: 0.15s; }
+.town-btn:nth-child(4) { animation-delay: 0.20s; }
+
+@keyframes buttonPop {
+  0%   { opacity: 0; transform: scale(0.85); }
+  60%  { transform: scale(1.05); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* 面板淡入時，面板標題加個發光 */
+.panel-title {
+  animation: titleGlow 0.5s ease;
+}
+@keyframes titleGlow {
+  from { text-shadow: 0 0 0 transparent; }
+  to   { text-shadow: 0 0 8px rgba(79,195,247,0.4); }
+}
+
+/* HP 條動畫（血條變動時平滑過渡） */
+.hp-fill {
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 成就彈窗加點彈跳 */
+.achievement-popup {
+  transition: top 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* 按鈕點擊漣漪感 */
+button:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+/* 標籤頁切換淡入 */
+.tab.active {
+  animation: tabFade 0.25s ease;
+}
+@keyframes tabFade {
+  from { background: rgba(30,136,229,0.3); }
+  to   { background: #1e88e5; }
+}
+
+/* 避免手機上動畫卡頓，使用者若設定減少動態，關閉動畫 */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
