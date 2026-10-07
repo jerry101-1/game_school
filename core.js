@@ -74,7 +74,8 @@ function showScreen(name) {
   ['screen-start','screen-town','screen-shop','screen-loot',
    'screen-fruit','screen-equip','screen-talent','screen-abyss',
    'screen-adventure','screen-battle','screen-job','screen-forge',
-   'screen-dungeon','screen-guild','screen-pet','screen-cloud']
+   'screen-dungeon','screen-guild','screen-pet','screen-cloud',
+   'screen-train','screen-collect','screen-system']
     .forEach(s => hide(s));
   if (name) show(name);
 }
