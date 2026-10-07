@@ -366,13 +366,20 @@ function updateTownUI() {
 // ============================================================
 //  ★ 狀態區折疊切換
 // ============================================================
-let townStatsOpen = false;  // 預設收合
+let townStatsOpen = false;
 
 function toggleTownStats() {
+  const body = document.getElementById('townStats');
+  const icon = document.getElementById('townStatsIcon');
+  const hint = document.getElementById('townStatsHint');
+
+  // 防呆：找不到元素就 log 出來，方便除錯
+  if (!body || !icon || !hint) {
+    console.error('[toggleTownStats] 找不到元素：', { body, icon, hint });
+    return;
+  }
+
   townStatsOpen = !townStatsOpen;
-  const body = $('townStats');
-  const icon = $('townStatsIcon');
-  const hint = $('townStatsHint');
   if (townStatsOpen) {
     body.classList.remove('collapsed');
     icon.style.transform = 'rotate(180deg)';
@@ -383,6 +390,3 @@ function toggleTownStats() {
     hint.textContent = '點擊展開';
   }
 }
-
-// 想在首次進村莊時自動展開一次的話，改這裡：
-// townStatsOpen = true; 並在 updateTownUI 開頭呼叫一次同步
