@@ -27,6 +27,8 @@
 <!-- 村莊 -->
 <div id="screen-town" class="panel hidden">
   <div class="panel-title">🏘️ 村莊</div>
+
+  <!-- 狀態區 -->
   <div class="stat-row"><span>職業：<span class="val" id="townRole">-</span></span><span>等級：<span class="val" id="townLevel">1</span></span></div>
   <div class="stat-row"><span>職業等級：<span class="val" id="townRoleLv">1</span></span><span>突破等級：<span class="val" id="townBkLv">0</span></span></div>
   <div class="stat-row"><span>HP：<span class="val" id="townHp">-</span></span><span>金幣：<span class="val" id="townMoney">0</span></span></div>
@@ -35,24 +37,119 @@
   <div class="stat-row"><span>經驗：<span class="val" id="townExp">0/100</span></span><span>擊殺：<span class="val" id="townKill">0</span></span></div>
   <div class="stat-row"><span>天賦點：<span class="val" id="townTalent">0</span></span><span>深淵最高：<span class="val" id="townAbyss">0</span></span></div>
   <div class="stat-row"><span>公會：<span class="val" id="townGuild">無</span></span><span>寵物：<span class="val" id="townPet">無</span></span></div>
-  <div class="actions" style="margin-top:12px;">
-    <button onclick="goAdventure()">⚔ 出發冒險</button>
-    <button class="abyss" onclick="openAbyss()">🌀 深淵</button>
-    <button class="gold" onclick="openShop()">🛒 商店</button>
-    <button class="fruit" onclick="openFruit()">🍇 果實</button>
-    <button class="ach" onclick="openEquip()">🎽 裝備</button>
-    <button class="talent" onclick="openTalent()">🌟 天賦</button>    
+
+  <!-- ── 第一層：主要行動（大按鈕） ── -->
+  <div class="town-section">
+    <div class="town-section-label">⚔️ 冒險</div>
+    <div class="town-grid-lg">
+      <button class="town-btn adventure" onclick="goAdventure()">
+        <span class="tb-icon">⚔️</span>
+        <span class="tb-name">出發冒險</span>
+        <span class="tb-sub">章節 ${S.chapter}</span>
+      </button>
+      <button class="town-btn dungeon" onclick="openDungeon()">
+        <span class="tb-icon">🏰</span>
+        <span class="tb-name">副本</span>
+        <span class="tb-sub">挑戰獎勵</span>
+      </button>
+      <button class="town-btn abyss-btn" onclick="openAbyss()">
+        <span class="tb-icon">🌀</span>
+        <span class="tb-name">深淵</span>
+        <span class="tb-sub">無盡挑戰</span>
+      </button>
+      <button class="town-btn guild-btn" onclick="openGuild()">
+        <span class="tb-icon">🏛️</span>
+        <span class="tb-name">公會</span>
+        <span class="tb-sub">任務加成</span>
+      </button>
+    </div>
   </div>
-  <div class="actions">
-    <button class="skill" onclick="openJobChange()">🔄 轉職神殿</button>
-    <button class="danger" onclick="openForge()">⚒️ 武器合成</button>
-    <button style="background:#5e35b1;" onclick="openDungeon()">🏰 副本</button>
-    <button style="background:#00838f;" onclick="openGuild()">🏛️ 公會</button>
-    <button style="background:#ef6c00;" onclick="openPet()">🐾 寵物</button>
+
+  <!-- ── 第二層：三大分類（開啟子選單） ── -->
+  <div class="town-section">
+    <div class="town-grid-sm">
+      <button class="town-cat cat-train" onclick="openTrainMenu()">
+        <span class="tc-icon">🛠️</span>
+        <span class="tc-name">養成</span>
+      </button>
+      <button class="town-cat cat-collect" onclick="openCollectMenu()">
+        <span class="tc-icon">🎒</span>
+        <span class="tc-name">收藏</span>
+      </button>
+      <button class="town-cat cat-system" onclick="openSystemMenu()">
+        <span class="tc-icon">⚙️</span>
+        <span class="tc-name">系統</span>
+      </button>
+    </div>
   </div>
-  <div class="actions">
-    <button onclick="saveGame()">💾 存檔</button>
-    <button onclick="saveToCloud()">☁ 雲端存檔</button>
+</div>
+
+<!-- 養成子選單 -->
+<div id="screen-train" class="panel hidden">
+  <div class="panel-title">🛠️ 養成</div>
+  <div class="subtitle" style="text-align:center;margin-bottom:12px;">強化自己，成為更強的勇者</div>
+  <div class="menu-list">
+    <button class="menu-item" onclick="openShop()">
+      <span class="mi-icon">🛒</span>
+      <div><div class="mi-name">商店</div><div class="mi-desc">購買裝備、藥水、強化數值</div></div>
+    </button>
+    <button class="menu-item" onclick="openTalent()">
+      <span class="mi-icon">🌟</span>
+      <div><div class="mi-name">天賦樹</div><div class="mi-desc">分配天賦點、突破系統</div></div>
+    </button>
+    <button class="menu-item" onclick="openJobChange()">
+      <span class="mi-icon">🔄</span>
+      <div><div class="mi-name">轉職神殿</div><div class="mi-desc">隨機抽 3 職業，可繼承等級</div></div>
+    </button>
+    <button class="menu-item" onclick="openForge()">
+      <span class="mi-icon">⚒️</span>
+      <div><div class="mi-name">武器合成</div><div class="mi-desc">3 把同階合成高一階（有風險）</div></div>
+    </button>
+  </div>
+  <div class="actions" style="margin-top:10px;">
+    <button onclick="backToTown()">← 返回村莊</button>
+  </div>
+</div>
+
+<!-- 收藏子選單 -->
+<div id="screen-collect" class="panel hidden">
+  <div class="panel-title">🎒 收藏</div>
+  <div class="subtitle" style="text-align:center;margin-bottom:12px;">裝備、果實、寵物</div>
+  <div class="menu-list">
+    <button class="menu-item" onclick="openEquip()">
+      <span class="mi-icon">🎽</span>
+      <div><div class="mi-name">裝備</div><div class="mi-desc">武器 / 防具 / 飾品</div></div>
+    </button>
+    <button class="menu-item" onclick="openFruit()">
+      <span class="mi-icon">🍇</span>
+      <div><div class="mi-name">果實</div><div class="mi-desc">抽果、練果、裝備</div></div>
+    </button>
+    <button class="menu-item" onclick="openPet()">
+      <span class="mi-icon">🐾</span>
+      <div><div class="mi-name">寵物</div><div class="mi-desc">出戰寵物、查看技能</div></div>
+    </button>
+  </div>
+  <div class="actions" style="margin-top:10px;">
+    <button onclick="backToTown()">← 返回村莊</button>
+  </div>
+</div>
+
+<!-- 系統子選單 -->
+<div id="screen-system" class="panel hidden">
+  <div class="panel-title">⚙️ 系統</div>
+  <div class="subtitle" style="text-align:center;margin-bottom:12px;">存檔、雲端、離開</div>
+  <div class="menu-list">
+    <button class="menu-item" onclick="saveGame()">
+      <span class="mi-icon">💾</span>
+      <div><div class="mi-name">本地存檔</div><div class="mi-desc">儲存到這台電腦的瀏覽器</div></div>
+    </button>
+    <button class="menu-item" onclick="openCloud()">
+      <span class="mi-icon">☁</span>
+      <div><div class="mi-name">雲端存檔</div><div class="mi-desc">產生分享碼，跨電腦遊玩</div></div>
+    </button>
+  </div>
+  <div class="actions" style="margin-top:10px;">
+    <button onclick="backToTown()">← 返回村莊</button>
   </div>
 </div>
 
