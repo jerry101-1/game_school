@@ -360,3 +360,27 @@ function updateTownUI() {
   $('townGuild').textContent = S.guild.id ? GUILDS[S.guild.id].name : '無';
   $('townPet').textContent = S.activePet ? PETS[S.activePet].name : '無';
 }
+
+// ============================================================
+//  ★ 狀態區折疊切換
+// ============================================================
+let townStatsOpen = false;  // 預設收合
+
+function toggleTownStats() {
+  townStatsOpen = !townStatsOpen;
+  const body = $('townStats');
+  const icon = $('townStatsIcon');
+  const hint = $('townStatsHint');
+  if (townStatsOpen) {
+    body.classList.remove('collapsed');
+    icon.style.transform = 'rotate(180deg)';
+    hint.textContent = '點擊收合';
+  } else {
+    body.classList.add('collapsed');
+    icon.style.transform = 'rotate(0deg)';
+    hint.textContent = '點擊展開';
+  }
+}
+
+// 想在首次進村莊時自動展開一次的話，改這裡：
+// townStatsOpen = true; 並在 updateTownUI 開頭呼叫一次同步
