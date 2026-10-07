@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚔ RPG 冒險 ⚔</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h1>⚔ RPG 冒險 ⚔</h1>
+
+<!-- 開場 -->
+<div id="screen-start" class="panel">
+  <div class="panel-title">歡迎來到冒險世界</div>
+  <p class="subtitle" style="margin-bottom:10px;">在很久很久以前...世界被黑暗籠罩...而你，是唯一的希望...</p>
+  <div style="margin-bottom:10px;">
+    <label style="font-size:13px;">勇者名字：</label>
+    <input id="inputName" type="text" placeholder="無名勇者">
+  </div>
+  <div class="actions" style="justify-content:flex-start;">
+    <button class="gold" onclick="startGame()">開始冒險</button>
+    <button onclick="loadFromCloud()">☁ 雲端讀檔</button>
+  </div>
+</div>
+
+<!-- 村莊 -->
+<div id="screen-town" class="panel hidden">
+  <div class="panel-title">🏘️ 村莊</div>
+  <div class="stat-row"><span>職業：<span class="val" id="townRole">-</span></span><span>等級：<span class="val" id="townLevel">1</span></span></div>
+  <div class="stat-row"><span>職業等級：<span class="val" id="townRoleLv">1</span></span><span>突破等級：<span class="val" id="townBkLv">0</span></span></div>
+  <div class="stat-row"><span>HP：<span class="val" id="townHp">-</span></span><span>金幣：<span class="val" id="townMoney">0</span></span></div>
+  <div class="stat-row"><span>攻擊：<span class="val" id="townAtk">-</span></span><span>防禦：<span class="val" id="townDef">-</span></span></div>
+  <div class="stat-row"><span>藥水：<span class="val" id="townPotion">0</span></span><span>章節：<span class="val" id="townChapter">1</span></span></div>
+  <div class="stat-row"><span>經驗：<span class="val" id="townExp">0/100</span></span><span>擊殺：<span class="val" id="townKill">0</span></span></div>
+  <div class="stat-row"><span>天賦點：<span class="val" id="townTalent">0</span></span><span>深淵最高：<span class="val" id="townAbyss">0</span></span></div>
+  <div class="stat-row"><span>公會：<span class="val" id="townGuild">無</span></span><span>寵物：<span class="val" id="townPet">無</span></span></div>
+  <div class="actions" style="margin-top:12px;">
+    <button onclick="goAdventure()">⚔ 出發冒險</button>
+    <button class="abyss" onclick="openAbyss()">🌀 深淵</button>
+    <button class="gold" onclick="openShop()">🛒 商店</button>
+    <button class="fruit" onclick="openFruit()">🍇 果實</button>
+    <button class="ach" onclick="openEquip()">🎽 裝備</button>
+    <button class="talent" onclick="openTalent()">🌟 天賦</button>
+  </div>
+  <div class="actions">
+    <button class="skill" onclick="openJobChange()">🔄 轉職神殿</button>
+    <button class="danger" onclick="openForge()">⚒️ 武器合成</button>
+    <button style="background:#5e35b1;" onclick="openDungeon()">🏰 副本</button>
+    <button style="background:#00838f;" onclick="openGuild()">🏛️ 公會</button>
+    <button style="background:#ef6c00;" onclick="openPet()">🐾 寵物</button>
+  </div>
+  <div class="actions">
+    <button onclick="saveGame()">💾 存檔</button>
+    <button onclick="saveToCloud()">☁ 雲端存檔</button>
+  </div>
+</div>
+
+<!-- 商店 -->
+<div id="screen-shop" class="panel hidden">
+  <div class="panel-title">🛒 村莊商店 <span class="subtitle" id="shopMoney"></span></div>
+  <div id="shopList"></div>
+  <div class="actions" style="margin-top:10px;"><button onclick="closeShop()">離開商店</button></div>
+</div>
+
+<!-- 寶箱 -->
+<div id="screen-loot" class="panel hidden">
+  <div class="panel-title">🎁 寶箱三選一</div>
+  <div class="subtitle" style="text-align:center;margin-bottom:10px;">選擇一個獎勵（選完可繼續探索）</div>
+  <div id="lootList"></div>
+</div>
+
+<!-- 果實 -->
+<div id="screen-fruit" class="panel hidden">
+  <div class="panel-title">🍇 果實系統 <span class="subtitle" id="fruitMoney"></span></div>
+  <div class="tabs">
+    <div class="tab active" data-tab="draw" onclick="switchFruitTab('draw')">🎰 抽果</div>
+    <div class="tab" data-tab="bag" onclick="switchFruitTab('bag')">🎒 背包</div>
+  </div>
+  <div id="fruitContent"></div>
+  <div class="actions" style="margin-top:10px;"><button onclick="closeFruit()">離開</button></div>
+</div>
+
+<!-- 裝備 -->
+<div id="screen-equip" class="panel hidden">
+  <div class="panel-title">🎽 裝備系統 <span class="subtitle" id="equipMoney"></span></div>
+  <div class="tabs">
+    <div class="tab active" data-tab="worn" onclick="switchEquipTab('worn')">👤 已裝備</div>
+    <div class="tab" data-tab="bag" onclick="switchEquipTab('bag')">🎒 背包</div>
+  </div>
+  <div id="equipContent"></div>
+  <div class="actions" style="margin-top:10px;"><button onclick="closeEquip()">離開</button></div>
+</div>
+
+<!-- 天賦 -->
+<div id="screen-talent" class="panel hidden">
+  <div class="panel-title">🌟 天賦樹 <span class="subtitle" id="talentPoints"></span></div>
+  <div id="talentContent"></div>
+  <div class="actions" style="margin-top:10px;">
+    <button class="danger" onclick="resetTalents()">重置天賦（1000 金）</button>
+    <button onclick="closeTalent()">離開</button>
+  </div>
+</div>
+
+<!-- 深淵 -->
+<div id="screen-abyss" class="panel hidden">
+  <div class="panel-title">🌀 深淵模式</div>
+  <div id="abyssContent"></div>
+  <div class="actions" style="margin-top:10px;"><button onclick="closeAbyss()">離開</button></div>
+</div>
+
+<!-- 轉職 -->
+<div id="screen-job" class="panel hidden">
+  <div class="panel-title">🔄 轉職神殿</div>
+  <div id="jobContent"></div>
+  <div class="actions" style="margin-top:10px;"><button onclick="closeJobChange()">離開</button></div>
+</div>
+
+<!-- 合成 -->
+<div id="screen-forge" class="panel hidden">
+  <div class="panel-title">⚒️ 武器合成</div>
+  <div id="forgeContent"></div>
+  <div class="actions" style="margin-top:10px;"><button onclick="closeForge()">離開</button></div>
+</div>
+
+<!-- 副本 -->
+<div id="screen-dungeon" class="panel hidden">
+  <div class="panel-title">🏰 副本</div>
+  <div id="dungeonContent"></div>
+  <div class="actions" style="margin-top:10px;"><button onclick="closeDungeon()">離開</button></div>
+</div>
+
+<!-- 公會 -->
+<div id="screen-guild" class="panel hidden">
+  <div class="panel-title">🏛️ 公會</div>
+  <div id="guildContent"></div>
+  <div class="actions" style="margin-top:10px;"><button onclick="closeGuild()">離開</button></div>
+</div>
+
+<!-- 寵物 -->
+<div id="screen-pet" class="panel hidden">
+  <div class="panel-title">🐾 寵物</div>
+  <div id="petContent"></div>
+  <div class="actions" style="margin-top:10px;"><button onclick="closePet()">離開</button></div>
+</div>
+
+<!-- 跨電腦存檔 -->
+<div id="screen-cloud" class="panel hidden">
+  <div class="panel-title">☁ 跨電腦存檔</div>
+  <div id="cloudContent"></div>
+  <div class="actions" style="margin-top:10px;"><button onclick="closeCloud()">離開</button></div>
+</div>
+
+<!-- 荒野（過場） -->
+<div id="screen-adventure" class="panel hidden">
+  <div class="panel-title">🌲 荒野探索</div>
+  <div class="stat-row"><span>HP：<span class="val" id="advHp">-</span></span><span>金幣：<span class="val" id="advMoney">0</span></span></div>
+  <div class="stat-row"><span>經驗：<span class="val" id="advExp">0/100</span></span><span>藥水：<span class="val" id="advPotion">0</span></span></div>
+</div>
+
+<!-- 戰鬥 -->
+<div id="screen-battle" class="panel hidden">
+  <div class="panel-title">🧙 你（<span id="battleRole"></span> Lv.<span id="battleLevel"></span>）
+    <span id="comboBadge" class="badge combo hidden"></span>
+  </div>
+  <div class="hp-bar">
+    <div id="playerHpBar" class="hp-fill green" style="width:100%"></div>
+    <div class="hp-text" id="playerHpText">100 / 100</div>
+  </div>
+  <div class="stat-row" style="margin-top:6px;">
+    <span>攻擊 <span class="val" id="battleAtk"></span></span>
+    <span>防禦 <span class="val" id="battleDef"></span></span>
+    <span>藥水 <span class="val" id="battlePotion"></span></span>
+  </div>
+
+  <!-- 寵物顯示區 -->
+  <div id="petBattleBar" style="margin-top:8px;"></div>
+
+  <div style="margin-top:12px;">
+    <div class="panel-title">
+      👹 <span id="monsterName">野生史萊姆</span>
+      <span id="monsterPrefix" class="badge prefix hidden"></span>
+      <span id="monsterBoss" class="badge boss hidden"></span>
+    </div>
+    <div class="hp-bar">
+      <div id="monsterHpBar" class="hp-fill green" style="width:100%"></div>
+      <div class="hp-text" id="monsterHpText">50 / 50</div>
+    </div>
+    <div class="stat-row" style="margin-top:6px;">
+      <span>Lv.<span class="val" id="monsterLv">1</span></span>
+      <span>弱點 <span class="val" id="monsterWeak"></span></span>
+      <span>抗性 <span class="val" id="monsterRes"></span></span>
+    </div>
+    <div class="subtitle" id="monsterSkill" style="margin-top:4px;"></div>
+  </div>
+
+  <div class="actions" style="margin-top:14px;">
+    <button id="btnAttack" onclick="playerAttack()">普通攻擊</button>
+    <button id="btnSkill"  class="skill"  onclick="playerSkill()">職業技能</button>
+    <button id="btnPower"  class="danger" onclick="playerPower()">全力一擊</button>
+    <button id="btnDefend" class="defend" onclick="playerDefend()">防禦</button>
+    <button id="btnPotion" class="potion" onclick="playerPotion()">藥水</button>
+    <button id="btnCombo"  class="gold hidden" onclick="playerCombo()">⚡ 連擊爆發</button>
+    <button id="btnAuto"   class="gold" onclick="toggleAuto()">自動</button>
+  </div>
+
+  <div id="fruitSkillBar"></div>
+  <div id="roleSkillInfo" style="text-align:center;font-size:11px;margin:4px 0;"></div>
+
+  <div class="actions">
+    <button id="btnContinue" class="gold hidden" onclick="continueAdventure()">繼續探索</button>
+    <button id="btnReturn"   class="hidden"    onclick="returnToTown()">返回村莊</button>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="panel-title">📜 戰鬥記錄 <span class="subtitle">（保留最新 60 條）</span></div>
+  <div id="log"></div>
+</div>
+
+<!-- ★ 腳本載入順序（很重要，不要改） -->
+<script src="data.js"></script>
+<script src="core.js"></script>
+<script src="battle.js"></script>
+<script src="town.js"></script>
+<script src="dungeon.js"></script>
+<script src="guild.js"></script>
+<script src="pet.js"></script>
+<script src="save.js"></script>
+<script src="main.js"></script>
+</body>
+</html>
