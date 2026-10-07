@@ -119,6 +119,7 @@ textarea { width:100%; height:120px; resize:vertical; }
 .achievement-popup .ach-desc { color:#aaa; font-size:11px; margin-top:2px; }
 
 /* ★ 新系統樣式 */
+
 .pet-card { background:#1a1a25; border:1px solid #00897b; border-radius:8px; padding:12px; margin:8px 0; }
 .pet-card.active { border-color:#4db6ac; box-shadow:0 0 8px rgba(77,182,172,0.3); }
 .pet-card .pet-name { color:#4db6ac; font-weight:bold; font-size:15px; }
@@ -132,6 +133,7 @@ textarea { width:100%; height:120px; resize:vertical; }
 .dungeon-card .dungeon-name { color:#9575cd; font-weight:bold; font-size:16px; }
 .dungeon-card .dungeon-info { color:#aaa; font-size:12px; margin-top:4px; }
 .cloud-card { background:#1a1a25; border:1px solid #0288d1; border-radius:8px; padding:14px; margin:10px 0; }
+
 /* ══════════════════════════════════════════════════════
    ★ 村莊新版 UI — 大按鈕 + 分類
    ══════════════════════════════════════════════════════ */
@@ -253,6 +255,7 @@ textarea { width:100%; height:120px; resize:vertical; }
 .menu-item .mi-name { font-weight: bold; font-size: 15px; color: #4fc3f7; }
 .menu-item .mi-desc { font-size: 12px; color: #888; margin-top: 2px; }
 
+
 /* ══════════════════════════════════════════════════════
    ★ 狀態區折疊
    ══════════════════════════════════════════════════════ */
@@ -304,6 +307,7 @@ textarea { width:100%; height:120px; resize:vertical; }
   opacity: 0;
   padding: 0;
 }
+
 
 /* ══════════════════════════════════════════════════════
    ★ 畫面過渡動畫
