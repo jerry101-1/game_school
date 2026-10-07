@@ -359,6 +359,8 @@ function updateTownUI() {
   $('townAbyss').textContent = S.abyssBest;
   $('townGuild').textContent = S.guild.id ? GUILDS[S.guild.id].name : '無';
   $('townPet').textContent = S.activePet ? PETS[S.activePet].name : '無';
+  const advSub = document.getElementById('townAdventureSub');
+  if (advSub) advSub.textContent = `章節 ${S.chapter}`;
 }
 
 // ============================================================
