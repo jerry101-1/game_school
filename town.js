@@ -2,6 +2,12 @@
 //  ★ 村莊 — 商店、果實、裝備、天賦、深淵、轉職、合成
 // ============================================================
 
+// ── 子選單切換 ──
+function openTrainMenu()   { showScreen('screen-train'); }
+function openCollectMenu() { showScreen('screen-collect'); }
+function openSystemMenu()  { showScreen('screen-system'); }
+function backToTown()      { updateTownUI(); showScreen('screen-town'); }
+
 // ── 商店 ──
 function openShop() { showScreen('screen-shop'); renderShop(); }
 function closeShop() { updateTownUI(); showScreen('screen-town'); }
