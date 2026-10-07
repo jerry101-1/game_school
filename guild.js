@@ -113,3 +113,24 @@ function claimGuildQuest(qid) {
   renderGuild();
   updateTownUI();
 }
+
+// ============================================================
+//  ★ 公會任務進度累加（在對應事件發生時呼叫）
+// ============================================================
+function addGuildProgress(key, amount = 1) {
+  if (!S.guild.id) return;
+  if (!S.guild.questProgress) S.guild.questProgress = {};
+  S.guild.questProgress[key] = (S.guild.questProgress[key] || 0) + amount;
+
+  // 檢查是否達成，達成時提示
+  const g = GUILDS[S.guild.id];
+  if (!g) return;
+  g.quests.forEach(q => {
+    if (q.key !== key) return;
+    if (S.guild.questClaimed && S.guild.questClaimed[q.id]) return;
+    const cur = S.guild.questProgress[key];
+    if (cur === q.goal) {
+      log(`📋 公會任務《${q.name}》已達成！可至公會領取獎勵。`, 'guild-text');
+    }
+  });
+}
