@@ -4,6 +4,11 @@
 
 const SAVE_KEY = 'rpg_save_v6';
 
+function saveToCloud() {
+  openCloud();
+  setTimeout(() => exportCloudSave(), 100);
+}
+
 function saveGame() {
   try {
     const save = {...S, monster:null, inBattle:false, gameOver:false};
