@@ -77,14 +77,19 @@ function renderCloud() {
   `;
 }
 
+// ── 跨電腦存檔（壓縮版） ──
 function exportCloudSave() {
   try {
     const save = {...S, monster:null, inBattle:false, gameOver:false};
     const json = JSON.stringify(save);
-    // 簡易壓縮：UTF-8 → Base64
-    const b64 = btoa(unescape(encodeURIComponent(json)));
-    $('cloudExport').value = b64;
-    log('☁ 分享碼已產生，請複製。', 'system');
+    // ★ LZ-String 壓縮 → Base64（比單純 Base64 縮 70%）
+    const compressed = LZString.compressToBase64(json);
+    const code = 'RPG1:' + compressed;
+    $('cloudExport').value = code;
+    const origLen = json.length;
+    const codeLen = code.length;
+    const saved = Math.round((1 - codeLen/origLen) * 100);
+    log(`☁ 分享碼已產生（原始 ${origLen} → 壓縮 ${codeLen} 字元，省 ${saved}%）`, 'system');
   } catch(e) { log('產生失敗：' + e.message, 'lose'); }
 }
 
@@ -101,9 +106,15 @@ function copyCloudSave() {
 function importCloudSave() {
   const code = $('cloudImport').value.trim();
   if (!code) { log('請貼上分享碼！', 'lose'); return; }
+  if (!code.startsWith('RPG1:')) {
+    log('分享碼格式錯誤（缺少 RPG1: 前綴）', 'lose');
+    return;
+  }
   if (!confirm('匯入會覆蓋目前進度，確定嗎？')) return;
   try {
-    const json = decodeURIComponent(escape(atob(code)));
+    const compressed = code.slice(5);  // 去掉 "RPG1:"
+    const json = LZString.decompressFromBase64(compressed);
+    if (!json) { log('解壓失敗，分享碼可能損壞。', 'lose'); return; }
     const p = JSON.parse(json);
     Object.assign(S, p);
     // 修復欄位
@@ -118,9 +129,8 @@ function importCloudSave() {
     updateTownUI();
     closeCloud();
     showScreen('screen-town');
-  } catch(e) { log('匯入失敗：分享碼格式錯誤。', 'lose'); }
+  } catch(e) { log('匯入失敗：' + e.message, 'lose'); }
 }
-
 // 快速載入雲端（開場畫面用）
 function loadFromCloud() {
   openCloud();
