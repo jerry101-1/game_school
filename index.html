@@ -163,8 +163,20 @@
 <!-- 商店 -->
 <div id="screen-shop" class="panel hidden">
   <div class="panel-title">🛒 村莊商店 <span class="subtitle" id="shopMoney"></span></div>
+
+  <!-- 批量購買模式切換 -->
+  <div class="shop-batch-bar">
+    <span class="subtitle" style="margin-right:8px;">購買數量：</span>
+    <button class="batch-btn active" data-batch="1"   onclick="setShopBatch(1)">×1</button>
+    <button class="batch-btn"        data-batch="5"   onclick="setShopBatch(5)">×5</button>
+    <button class="batch-btn"        data-batch="10"  onclick="setShopBatch(10)">×10</button>
+    <button class="batch-btn"        data-batch="max" onclick="setShopBatch('max')">Max</button>
+  </div>
+
   <div id="shopList"></div>
-  <div class="actions" style="margin-top:10px;"><button onclick="closeShop()">離開商店</button></div>
+  <div class="actions" style="margin-top:10px;">
+    <button onclick="closeShop()">離開商店</button>
+  </div>
 </div>
 
 <!-- 寶箱 -->
