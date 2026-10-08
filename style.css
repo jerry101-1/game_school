@@ -393,3 +393,53 @@ button:active:not(:disabled) {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ══════════════════════════════════════════════════════
+   ★ 商店批量購買列
+   ══════════════════════════════════════════════════════ */
+
+.shop-batch-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 12px;
+  background: #1a1a25;
+  border: 1px solid #2a2a3a;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.batch-btn {
+  padding: 6px 14px;
+  background: #2a2a3a;
+  color: #aaa;
+  border: 1px solid #3a3a4a;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.15s;
+  margin: 0;
+}
+
+.batch-btn:hover:not(:disabled) {
+  background: #33334a;
+  color: #fff;
+  transform: none;
+}
+
+.batch-btn.active {
+  background: #1e88e5;
+  color: #fff;
+  border-color: #42a5f5;
+  box-shadow: 0 0 10px rgba(30,136,229,0.5);
+}
+
+/* 商店項目加個小圖示顯示可買數量 */
+.shop-item .buy-preview {
+  color: #4fc3f7;
+  font-size: 11px;
+  margin-left: 6px;
+}
