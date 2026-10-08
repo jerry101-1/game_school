@@ -12,18 +12,302 @@ function backToTown()      { updateTownUI(); showScreen('screen-town'); }
 function openShop() { showScreen('screen-shop'); renderShop(); }
 function closeShop() { updateTownUI(); showScreen('screen-town'); }
 
+// ============================================================
+//  ★ 商店批量購買
+// ============================================================
+let shopBatch = 1;  // 1 / 5 / 10 / 'max'
+
+function setShopBatch(n) {
+  shopBatch = n;
+  document.querySelectorAll('.batch-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.batch === String(n));
+  });
+  renderShop();  // 重繪，讓價格顯示更新
+}
+
+// 計算「買 n 個要多少錢、買得起幾個」
+function calcBatch(item) {
+  const unitCost = item.cost;
+  let count = shopBatch === 'max' ? Infinity : shopBatch;
+  // 買得起的上限
+  const affordable = Math.floor(S.money / unitCost);
+  if (count > affordable) count = affordable;
+  const totalCost = count * unitCost;
+  return { count, totalCost, affordable };
+}
+
 function renderShop() {
   $('shopMoney').textContent = `（金幣：${S.money}）`;
   const items = [];
 
-  const swordCost = S.swordLevel === 0 ? 50 : 50 + S.swordLevel * 30;
-  const swordGain = S.swordLevel === 0 ? 5 : 5 + S.swordLevel * 2;
+  // ── 武器強化 ──
   items.push({
-    name: S.swordLevel === 0 ? '強化武器 (+5 攻擊力)' : `強化武器 Lv.${S.swordLevel} → Lv.${S.swordLevel+1} (+${swordGain} 攻擊)`,
-    cost: swordCost,
-    action: () => { S.atk += swordGain; S.money -= swordCost; S.swordLevel++; log(`武器強化成功！攻擊力 +${swordGain}`,'win'); }
+    name: '強化武器',
+    desc: () => S.swordLevel === 0
+      ? `+5 攻擊力`
+      : `Lv.${S.swordLevel} → Lv.${S.swordLevel+1}（+${5 + S.swordLevel * 2} 攻擊）`,
+    cost: () => S.swordLevel === 0 ? 50 : 50 + S.swordLevel * 30,
+    maxCount: () => {
+      // 武器強化每次只能 1 級（因為花費會變），Max = 能升幾級就升幾級
+      let lv = S.swordLevel, money = S.money, cnt = 0;
+      while (true) {
+        const c = lv === 0 ? 50 : 50 + lv * 30;
+        if (money < c) break;
+        money -= c;
+        lv++;
+        cnt++;
+        if (cnt > 999) break;
+      }
+      return cnt;
+    },
+    singleAction: () => {
+      const cost = S.swordLevel === 0 ? 50 : 50 + S.swordLevel * 30;
+      const gain = S.swordLevel === 0 ? 5 : 5 + S.swordLevel * 2;
+      S.atk += gain; S.money -= cost; S.swordLevel++;
+    },
+    batchAction: (n) => {
+      let totalGain = 0;
+      for (let i = 0; i < n; i++) {
+        const cost = S.swordLevel === 0 ? 50 : 50 + S.swordLevel * 30;
+        const gain = S.swordLevel === 0 ? 5 : 5 + S.swordLevel * 2;
+        S.atk += gain; S.money -= cost; S.swordLevel++;
+        totalGain += gain;
+      }
+      return `武器強化 ${n} 次！攻擊力共 +${totalGain}（目前 ${S.atk}）`;
+    },
+    logClass: 'win',
   });
 
+  // ── 護甲強化 ──
+  items.push({
+    name: '強化護甲',
+    desc: () => S.shieldLevel === 0
+      ? `+3 防禦力`
+      : `Lv.${S.shieldLevel} → Lv.${S.shieldLevel+1}（+${3 + S.shieldLevel * 2} 防禦）`,
+    cost: () => S.shieldLevel === 0 ? 50 : 50 + S.shieldLevel * 30,
+    maxCount: () => {
+      let lv = S.shieldLevel, money = S.money, cnt = 0;
+      while (true) {
+        const c = lv === 0 ? 50 : 50 + lv * 30;
+        if (money < c) break;
+        money -= c; lv++; cnt++;
+        if (cnt > 999) break;
+      }
+      return cnt;
+    },
+    singleAction: () => {
+      const cost = S.shieldLevel === 0 ? 50 : 50 + S.shieldLevel * 30;
+      const gain = S.shieldLevel === 0 ? 3 : 3 + S.shieldLevel * 2;
+      S.def += gain; S.money -= cost; S.shieldLevel++;
+    },
+    batchAction: (n) => {
+      let totalGain = 0;
+      for (let i = 0; i < n; i++) {
+        const cost = S.shieldLevel === 0 ? 50 : 50 + S.shieldLevel * 30;
+        const gain = S.shieldLevel === 0 ? 3 : 3 + S.shieldLevel * 2;
+        S.def += gain; S.money -= cost; S.shieldLevel++;
+        totalGain += gain;
+      }
+      return `護甲強化 ${n} 次！防禦力共 +${totalGain}（目前 ${S.def}）`;
+    },
+    logClass: 'win',
+  });
+
+  // ── 體力強化 ──
+  items.push({
+    name: '增加體力',
+    desc: () => '+20 最大血量',
+    cost: () => 50,
+    maxCount: () => Math.floor(S.money / 50),
+    singleAction: () => { S.maxHp += 20; S.hp = effMaxHp(); S.money -= 50; },
+    batchAction: (n) => {
+      S.maxHp += 20 * n;
+      S.hp = effMaxHp();
+      S.money -= 50 * n;
+      return `體力強化 ${n} 次！最大 HP +${20*n}（目前 ${effMaxHp()}）`;
+    },
+    logClass: 'win',
+  });
+
+  // ── 治療藥水 ──
+  items.push({
+    name: '治療藥水',
+    desc: () => '戰鬥中回復 40% HP',
+    cost: () => 100,
+    maxCount: () => Math.floor(S.money / 100),
+    singleAction: () => { S.potion++; S.money -= 100; },
+    batchAction: (n) => {
+      S.potion += n;
+      S.money -= 100 * n;
+      return `購買 ${n} 瓶藥水！（目前 ${S.potion} 瓶）`;
+    },
+    logClass: 'win',
+  });
+
+  // ── 惡魔契約（Lv.10+）──
+  if (S.level >= 10) {
+    items.push({
+      name: '簽訂惡魔契約',
+      desc: () => {
+        const sa = S.contractLevel === 0 ? 250 : 250 + S.contractLevel * 100;
+        const sl = S.contractLevel === 0 ? 100 : 100 + S.contractLevel * 50;
+        return `+${sa} 攻擊 / -${sl} 最大HP（需 HP 足夠）`;
+      },
+      cost: () => S.contractLevel === 0 ? 500 : 500 + S.contractLevel * 500,
+      maxCount: () => {
+        let lv = S.contractLevel, hp = S.maxHp, money = S.money, cnt = 0;
+        while (true) {
+          const c = lv === 0 ? 500 : 500 + lv * 500;
+          const loseHP = lv === 0 ? 100 : 100 + lv * 50;
+          if (money < c || hp <= loseHP + 10) break;
+          money -= c; hp -= loseHP; lv++; cnt++;
+          if (cnt > 999) break;
+        }
+        return cnt;
+      },
+      singleAction: () => {
+        const cost = S.contractLevel === 0 ? 500 : 500 + S.contractLevel * 500;
+        const sa = S.contractLevel === 0 ? 250 : 250 + S.contractLevel * 100;
+        const sl = S.contractLevel === 0 ? 100 : 100 + S.contractLevel * 50;
+        S.atk += sa; S.maxHp -= sl;
+        if (S.hp > effMaxHp()) S.hp = effMaxHp();
+        S.money -= cost; S.contractLevel++;
+      },
+      batchAction: (n) => {
+        let totalAtk = 0;
+        for (let i = 0; i < n; i++) {
+          const cost = S.contractLevel === 0 ? 500 : 500 + S.contractLevel * 500;
+          const sa = S.contractLevel === 0 ? 250 : 250 + S.contractLevel * 100;
+          const sl = S.contractLevel === 0 ? 100 : 100 + S.contractLevel * 50;
+          S.atk += sa; S.maxHp -= sl;
+          S.money -= cost; S.contractLevel++;
+          totalAtk += sa;
+        }
+        if (S.hp > effMaxHp()) S.hp = effMaxHp();
+        return `簽訂 ${n} 層契約！攻擊共 +${totalAtk}`;
+      },
+      logClass: 'skill-text',
+    });
+
+    // ── 時空學習秘典 ──
+    items.push({
+      name: '時空學習秘典',
+      desc: () => `經驗 +${S.expShopLevel === 0 ? 20 : 15}%`,
+      cost: () => S.expShopLevel === 0 ? 600 : 600 + S.expShopLevel * 500,
+      maxCount: () => {
+        let lv = S.expShopLevel, money = S.money, cnt = 0;
+        while (true) {
+          const c = lv === 0 ? 600 : 600 + lv * 500;
+          if (money < c) break;
+          money -= c; lv++; cnt++;
+          if (cnt > 999) break;
+        }
+        return cnt;
+      },
+      singleAction: () => {
+        const cost = S.expShopLevel === 0 ? 600 : 600 + S.expShopLevel * 500;
+        const eg = S.expShopLevel === 0 ? 20 : 15;
+        S.playexp += eg; S.money -= cost; S.expShopLevel++;
+      },
+      batchAction: (n) => {
+        let totalGain = 0;
+        for (let i = 0; i < n; i++) {
+          const cost = S.expShopLevel === 0 ? 600 : 600 + S.expShopLevel * 500;
+          const eg = S.expShopLevel === 0 ? 20 : 15;
+          S.playexp += eg; S.money -= cost; S.expShopLevel++;
+          totalGain += eg;
+        }
+        return `閱讀秘典 ${n} 次！經驗加成 +${totalGain}%（目前 ${S.playexp}%）`;
+      },
+      logClass: 'win',
+    });
+  }
+
+  // ── 隨機裝備（不支援批量，因為是隨機）──
+  items.push({
+    name: '🛒 購買隨機裝備',
+    desc: () => '依等級生成隨機裝備',
+    cost: () => 200 + S.level * 20,
+    maxCount: () => 1,  // 只能買 1 個（避免背包爆掉）
+    singleAction: () => {
+      const cost = 200 + S.level * 20;
+      const item = genEquipment(S.level, pickRarity(S.level/5));
+      S.inventory.push(item);
+      S.money -= cost;
+      log(`獲得裝備：${item.name}`,'win');
+    },
+    batchAction: (n) => {
+      const cost = 200 + S.level * 20;
+      for (let i = 0; i < n; i++) {
+        const item = genEquipment(S.level, pickRarity(S.level/5));
+        S.inventory.push(item);
+        S.money -= cost;
+      }
+      return `購買 ${n} 件隨機裝備`;
+    },
+    logClass: 'win',
+    noBatch: true,  // 標記不支援批量
+  });
+
+  // ── 繪製清單 ──
+  const list = $('shopList');
+  list.innerHTML = '';
+  items.forEach(it => {
+    const unitCost = it.cost();
+    const maxCount = it.maxCount ? it.maxCount() : 1;
+
+    // 決定這次買幾個
+    let count = shopBatch === 'max' ? maxCount : shopBatch;
+    if (it.noBatch) count = Math.min(count, 1);
+    if (count > maxCount) count = maxCount;
+    if (count < 0) count = 0;
+
+    const totalCost = unitCost * count;
+    const canBuy = count > 0 && S.money >= totalCost;
+
+    const row = document.createElement('div');
+    row.className = 'shop-item';
+
+    // 顯示文字
+    let countText = '';
+    if (shopBatch === 'max') {
+      countText = `（可買 ${maxCount} 個）`;
+    } else if (count > 0 && count !== shopBatch) {
+      countText = `（買 ${count} 個，金幣不足）`;
+    } else if (count > 0) {
+      countText = `（買 ${count} 個）`;
+    } else {
+      countText = `（金幣不足）`;
+    }
+
+    row.innerHTML = `
+      <div style="flex:1;">
+        <div style="font-weight:bold;">${it.name}</div>
+        <div class="subtitle">${it.desc()}</div>
+      </div>
+      <div style="text-align:right;white-space:nowrap;">
+        <div class="cost">${totalCost} 金 <span class="buy-preview">${countText}</span></div>
+        <button class="small" ${canBuy?'':'disabled'}>購買 ×${count}</button>
+      </div>
+    `;
+
+    row.querySelector('button').onclick = () => {
+      if (!canBuy) { log('金幣不足！','lose'); return; }
+      if (count === 1) {
+        it.singleAction();
+        log(`${it.name} 完成！`, it.logClass || 'win');
+      } else {
+        const msg = it.batchAction(count);
+        log(`【批量】${msg}`, it.logClass || 'win');
+      }
+      renderShop();
+      updateTownUI();
+      checkAchievements();
+    };
+
+    list.appendChild(row);
+  });
+}
   const shieldCost = S.shieldLevel === 0 ? 50 : 50 + S.shieldLevel * 30;
   const shieldGain = S.shieldLevel === 0 ? 3 : 3 + S.shieldLevel * 2;
   items.push({
