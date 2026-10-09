@@ -609,6 +609,7 @@ function afterBattle() {
   if (S.inAbyss) { setTimeout(() => abyssNextFloor(), 600); return; }
   if (S.dungeon.active) { setTimeout(() => dungeonNextFloor(), 600); return; }
 
+  // 升級
   while (S.exp >= S.expNeeded) {
     S.exp -= S.expNeeded;
     S.level++;
@@ -633,6 +634,7 @@ function afterBattle() {
     checkAchievements();
   }
 
+  // BOSS 通關 → 回村
   if (S.isBossFight && S.monster && S.monster.hp <= 0) {
     S.chapter++;
     log(`★ 第 ${S.chapter-1} 章通關！進入第 ${S.chapter} 章！`,'win');
@@ -642,9 +644,16 @@ function afterBattle() {
     return;
   }
 
-  $('btnContinue').classList.remove('hidden');
-  $('btnReturn').classList.remove('hidden');
-  log('是否繼續探索？','system');
+  // ★ 血量低於 30% → 自動回村
+  if (S.hp < effMaxHp() * 0.3) {
+    log(`⚠ 血量過低（${S.hp}/${effMaxHp()}），自動返回村莊。`, 'lose');
+    setTimeout(() => returnToTown(), 800);
+    return;
+  }
+
+  // ★ 沒有顯示返回按鈕，直接自動繼續下一場
+  log(`⚔ 繼續探索下一場...（血量 ${S.hp}/${effMaxHp()}）`, 'system');
+  setTimeout(() => nextEncounter(), 800);
 }
 
 function continueAdventure() {
