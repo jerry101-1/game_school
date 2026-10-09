@@ -85,6 +85,8 @@ function renderBattleUI() {
     const bBadge = $('monsterBoss');
     if (m.isBoss) { bBadge.textContent = S.inAbyss ? `深淵 ${S.abyssFloor}F` : (S.dungeon.active ? `副本 ${S.dungeon.floor}F` : `第 ${S.chapter} 章 BOSS`); bBadge.classList.remove('hidden'); }
     else bBadge.classList.add('hidden');
+
+    updateFavicon(S.hp / effMaxHp());
   }
 
   const sk = $('btnSkill');
