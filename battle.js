@@ -645,7 +645,7 @@ function afterBattle() {
   }
 
   // ★ 血量低於 30% → 自動回村
-  if (S.hp < effMaxHp() * 0.3) {
+  if (S.hp < effMaxHp() * 0.2) {
     log(`⚠ 血量過低（${S.hp}/${effMaxHp()}），自動返回村莊。`, 'lose');
     setTimeout(() => returnToTown(), 800);
     return;
