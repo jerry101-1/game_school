@@ -1,2 +1,2 @@
-# game_school
+# game
 play!!!
