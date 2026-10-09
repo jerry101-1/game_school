@@ -668,9 +668,9 @@ function continueAdventure() {
   nextEncounter();
 }
 
+//回村
 function returnToTown() {
-  $('btnContinue').classList.add('hidden');
-  $('btnReturn').classList.add('hidden');
+  if ($('btnContinue')) $('btnContinue').classList.add('hidden');
   S.autoMode = false;
   S.inBattle = false;
   S.inAbyss = false;
