@@ -390,3 +390,10 @@ function toggleTownStats() {
     hint.textContent = '點擊展開';
   }
 }
+
+// 動態更新 favicon（依 HP 變化）
+function updateFavicon(hpPct) {
+  const emoji = hpPct > 0.6 ? '⚔️' : hpPct > 0.3 ? '🛡️' : '💀';
+  const link = document.querySelector("link[rel='icon']");
+  link.href = `data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>${emoji}</text></svg>`;
+}
