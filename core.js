@@ -176,8 +176,14 @@ function effCritDmg() {
   return S.critDmg + t.critDmg + b.critDmg + g.critDmg;
 }
 
-// ── 突破花費 / 執行 ──
-function breakthroughCost() { return 500 * ((S.breakthroughLevel || 0) + 1); }
+// ── 突破花費（邊際遞減，避免後期天價）──
+function breakthroughCost() {
+  const lv = S.breakthroughLevel || 0;
+  // 前 50 級每級 +500，之後每級只 +100
+  if (lv < 50) return 500 * (lv + 1);
+  return 500 * 50 + 100 * (lv - 49);
+}
+
 // ── 突破（一次升多級）──
 function doBreakthroughMax() {
   if (!allTalentsMaxed()) { log('需要先將所有天賦點滿！', 'lose'); return; }
@@ -191,9 +197,8 @@ function doBreakthroughMax() {
 
   while (bp > 0) {
     const cost = breakthroughCost();
-    if (S.money < cost) break;  // 金幣不夠，停止
+    if (S.money < cost) break;
 
-    // 扣資源
     S.money -= cost;
     bp--;
     S.breakthroughLevel++;
@@ -201,35 +206,26 @@ function doBreakthroughMax() {
     spentBp++;
     spentGold += cost;
 
-    // 檢查里程碑
     const ms = BREAKTHROUGH_MILESTONES[S.breakthroughLevel];
     if (ms && !S.breakthroughMilestones[ms.key]) {
       S.breakthroughMilestones[ms.key] = true;
       milestonesUnlocked.push(`Lv.${S.breakthroughLevel} ${ms.name}（${ms.desc}）`);
     }
 
-    // 安全上限，避免無限迴圈
     if (leveled > 10000) break;
   }
 
   S.breakthroughPoints = bp;
 
   if (leveled === 0) {
-    log(`⚠ 金幣不足！下一級需要 ${breakthroughCost()} 金。`, 'lose');
+    log(`⚠ 金幣不足！下一級需要 ${breakthroughCost().toLocaleString()} 金。`, 'lose');
     return;
   }
 
   log(`✦ 一次突破 ${leveled} 級！花費 ${spentBp} 突破點 + ${spentGold.toLocaleString()} 金幣`, 'win');
   log(`✦ 突破等級：Lv.${S.breakthroughLevel}`, 'win');
-
-  // 顯示新解鎖的里程碑
-  milestonesUnlocked.forEach(m => {
-    log(`✦ 解鎖里程碑：${m}`, 'win');
-  });
-
-  if (bp > 0) {
-    log(`（剩餘突破點：${bp}，金幣不足無法繼續）`, 'system');
-  }
+  milestonesUnlocked.forEach(m => log(`✦ 解鎖里程碑：${m}`, 'win'));
+  if (bp > 0) log(`（剩餘突破點：${bp}，金幣不足無法繼續）`, 'system');
 
   renderTalent();
   updateTownUI();
