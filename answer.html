@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>☁ RPG 存檔解碼器</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #0a0a0f; color: #e0e0e0;
+  font-family: 'Consolas','Monaco',monospace;
+  padding: 15px; max-width: 900px; margin: 0 auto;
+  min-height: 100vh; line-height: 1.5;
+}
+h1 { color: #4fc3f7; text-align: center; font-size: 1.5em;
+     margin-bottom: 15px; text-shadow: 0 0 10px rgba(79,195,247,0.5); }
+.panel { background: #151520; border: 1px solid #2a2a3a;
+         border-radius: 8px; padding: 14px; margin-bottom: 12px; }
+.panel-title { color: #4fc3f7; font-weight: bold; margin-bottom: 10px;
+               font-size: 0.95em; display: flex; align-items: center; gap: 8px; }
+.subtitle { color: #888; font-size: 12px; }
+button {
+  background: #1e88e5; color: #fff; border: none; padding: 10px 16px;
+  font-size: 14px; font-weight: bold; border-radius: 6px; cursor: pointer;
+  margin: 4px 2px; font-family: inherit; transition: all 0.15s;
+}
+button:hover:not(:disabled) { background: #42a5f5; transform: translateY(-1px); }
+button:disabled { background: #333; color: #666; cursor: not-allowed; }
+button.gold { background: #f9a825; color: #111; }
+button.gold:hover:not(:disabled) { background: #fdd835; }
+button.danger { background: #c62828; }
+button.danger:hover:not(:disabled) { background: #e53935; }
+button.small { padding: 6px 12px; font-size: 12px; }
+textarea {
+  width: 100%; min-height: 120px; background: #0a0a15;
+  border: 1px solid #2a2a3a; color: #80cbc4;
+  padding: 10px; border-radius: 6px; font-family: inherit;
+  font-size: 12px; resize: vertical; word-break: break-all;
+}
+textarea:focus { outline: none; border-color: #4fc3f7; }
+.actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.stat-row { display: flex; justify-content: space-between;
+            font-size: 13px; margin: 4px 0; color: #ccc; }
+.stat-row .val { color: #4fc3f7; font-weight: bold; }
+.info-box { background: #0a1520; border-left: 3px solid #4fc3f7;
+            padding: 8px 12px; margin: 8px 0; font-size: 12px; border-radius: 4px; }
+.info-box.warn { border-left-color: #ff9800; background: #201508; }
+.info-box.error { border-left-color: #f44336; background: #200a08; }
+.info-box.success { border-left-color: #4caf50; background: #0a2008; }
+.editor {
+  background: #0a0a15; border: 1px solid #2a2a3a; border-radius: 6px;
+  padding: 12px; font-size: 13px; max-height: 500px; overflow-y: auto;
+}
+.editor-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 0; border-bottom: 1px solid #1a1a25;
+}
+.editor-row:last-child { border-bottom: none; }
+.editor-row label { flex: 0 0 140px; color: #888; font-size: 12px; }
+.editor-row input, .editor-row select {
+  flex: 1; background: #151520; border: 1px solid #2a2a3a;
+  color: #4fc3f7; padding: 6px 10px; border-radius: 4px;
+  font-family: inherit; font-size: 13px;
+}
+.editor-row input:focus, .editor-row select:focus {
+  outline: none; border-color: #4fc3f7;
+}
+.section-header {
+  background: #1a1a25; padding: 8px 10px; margin: 8px 0 4px 0;
+  border-radius: 4px; color: #ffd54f; font-weight: bold;
+  font-size: 13px; cursor: pointer; user-select: none;
+}
+.section-header:hover { background: #22223a; }
+pre {
+  background: #0a0a15; border: 1px solid #2a2a3a;
+  padding: 12px; border-radius: 6px; overflow-x: auto;
+  font-size: 12px; max-height: 400px; overflow-y: auto;
+  color: #80cbc4;
+}
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: #111; }
+::-webkit-scrollbar-thumb { background: #444; border-radius: 4px; }
+.tabs { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+.tab {
+  padding: 8px 14px; background: #1a1a25; border: 1px solid #2a2a3a;
+  border-radius: 6px; cursor: pointer; font-size: 13px; color: #888;
+  transition: all 0.15s;
+}
+.tab.active { background: #1e88e5; color: #fff; border-color: #1e88e5; }
+</style>
+</head>
+<body>
+
+<h1>☁ RPG 存檔解碼器</h1>
+
+<!-- ═══════════════════════════════════════════ -->
+<!--  輸入區                                      -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="panel">
+  <div class="panel-title">📥 貼上分享碼</div>
+  <div class="subtitle">支援 RPG1:（舊版）與 RPG2:（新版）格式</div>
+  <textarea id="inputCode" placeholder="貼上分享碼..."></textarea>
+  <div class="actions">
+    <button class="gold" onclick="decodeSave()">🔓 解碼</button>
+    <button onclick="pasteFromClipboard()">📋 從剪貼簿貼上</button>
+    <button class="danger" onclick="clearAll()">🗑️ 清空</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!--  提示訊息區                                  -->
+<!-- ═══════════════════════════════════════════ -->
+<div id="messageBox"></div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!--  結果區（解碼後才顯示）                      -->
+<!-- ═══════════════════════════════════════════ -->
+<div id="resultArea" style="display:none;">
+
+  <!-- Tabs -->
+  <div class="panel">
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('editor')">✏️ 編輯模式</div>
+      <div class="tab" onclick="switchTab('raw')">📄 原始 JSON</div>
+      <div class="tab" onclick="switchTab('stats')">📊 統計</div>
+    </div>
+
+    <!-- ── 編輯模式 ── -->
+    <div id="tab-editor">
+      <div class="subtitle" style="margin-bottom:10px;">
+        ⚠️ 修改後記得按「重新編碼」才會生效
+      </div>
+      <div id="editorContent" class="editor"></div>
+      <div class="actions">
+        <button class="gold" onclick="encodeSave()">🔒 重新編碼</button>
+        <button onclick="resetEdits()">↺ 還原</button>
+      </div>
+    </div>
+
+    <!-- ── 原始 JSON ── -->
+    <div id="tab-raw" style="display:none;">
+      <div class="subtitle" style="margin-bottom:10px;">
+        完整 JSON 內容（可讀格式）
+      </div>
+      <pre id="rawJson"></pre>
+      <div class="actions">
+        <button onclick="copyRawJson()">📋 複製 JSON</button>
+      </div>
+    </div>
+
+    <!-- ── 統計 ── -->
+    <div id="tab-stats" style="display:none;">
+      <div id="statsContent"></div>
+    </div>
+  </div>
+
+  <!-- 輸出區 -->
+  <div class="panel">
+    <div class="panel-title">📤 新的分享碼</div>
+    <div class="subtitle">複製這段貼回遊戲的「雲端存檔 → 匯入」</div>
+    <textarea id="outputCode" readonly></textarea>
+    <div class="actions">
+      <button class="gold" onclick="copyOutput()">📋 複製</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ============================================================
+//  LZ-String 極簡版（必要，解碼用）
+// ============================================================
+var LZString = (function() {
+  var f = String.fromCharCode;
+  var keyStrUriSafe = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-$";
+  var baseReverseDic = {};
+
+  function getBaseValue(alphabet, character) {
+    if (!baseReverseDic[alphabet]) {
+      baseReverseDic[alphabet] = {};
+      for (var i = 0; i < alphabet.length; i++) {
+        baseReverseDic[alphabet][alphabet.charAt(i)] = i;
+      }
+    }
+    return baseReverseDic[alphabet][character];
+  }
+
+  var LZString = {
+    compressToBase64: function(input) {
+      if (input == null) return "";
+      var res = LZString._compress(input, 6, function(a) {
+        return keyStrUriSafe.charAt(a);
+      });
+      switch (res.length % 4) {
+        default:
+        case 0: return res;
+        case 1: return res + "===";
+        case 2: return res + "==";
+        case 3: return res + "=";
+      }
+    },
+    decompressFromBase64: function(input) {
+      if (input == null) return "";
+      if (input == "") return null;
+      return LZString._decompress(input.length, 32, function(index) {
+        return getBaseValue(keyStrUriSafe, input.charAt(index));
+      });
+    },
+    _compress: function(uncompressed, bitsPerChar, getCharFromInt) {
+      if (uncompressed == null) return "";
+      var i, value,
+        context_dictionary = {},
+        context_dictionaryToCreate = {},
+        context_c = "", context_wc = "", context_w = "",
+        context_enlargeIn = 2, context_dictSize = 3,
+        context_numBits = 2, context_data = [],
+        context_data_val = 0, context_data_position = 0, ii;
+      for (ii = 0; ii < uncompressed.length; ii += 1) {
+        context_c = uncompressed.charAt(ii);
+        if (!Object.prototype.hasOwnProperty.call(context_dictionary, context_c)) {
+          context_dictionary[context_c] = context_dictSize++;
+          context_dictionaryToCreate[context_c] = true;
+        }
+        context_wc = context_w + context_c;
+        if (Object.prototype.hasOwnProperty.call(context_dictionary, context_wc)) {
+          context_w = context_wc;
+        } else {
+          if (Object.prototype.hasOwnProperty.call(context_dictionaryToCreate, context_w)) {
+            if (context_w.charCodeAt(0) < 256) {
+              for (i = 0; i < context_numBits; i++) {
+                context_data_val = (context_data_val << 1);
+                if (context_data_position == bitsPerChar - 1) {
+                  context_data_position = 0;
+                  context_data.push(getCharFromInt(context_data_val));
+                  context_data_val = 0;
+                } else context_data_position++;
+              }
+              value = context_w.charCodeAt(0);
+              for (i = 0; i < 8; i++) {
+                context_data_val = (context_data_val << 1) | (value & 1);
+                if (context_data_position == bitsPerChar - 1) {
+                  context_data_position = 0;
+                  context_data.push(getCharFromInt(context_data_val));
+                  context_data_val = 0;
+                } else context_data_position++;
+                value = value >> 1;
+              }
+            } else {
+              value = 1;
+              for (i = 0; i < context_numBits; i++) {
+                context_data_val = (context_data_val << 1) | value;
+                if (context_data_position == bitsPerChar - 1) {
+                  context_data_position = 0;
+                  context_data.push(getCharFromInt(context_data_val));
+                  context_data_val = 0;
+                } else context_data_position++;
+                value = 0;
+              }
+              value = context_w.charCodeAt(0);
+              for (i = 0; i < 16; i++) {
+                context_data_val = (context_data_val << 1) | (value & 1);
+                if (context_data_position == bitsPerChar - 1) {
+                  context_data_position = 0;
+                  context_data.push(getCharFromInt(context_data_val));
+                  context_data_val = 0;
+                } else context_data_position++;
+                value = value >> 1;
+              }
+            }
+            context_enlargeIn--;
+            if (context_enlargeIn == 0) {
+              context_enlargeIn = Math.pow(2, context_numBits);
+              context_numBits++;
+            }
+            delete context_dictionaryToCreate[context_w];
+          } else {
+            value = context_dictionary[context_w];
+            for (i = 0; i < context_numBits; i++) {
+              context_data_val = (context_data_val << 1) | (value & 1);
+              if (context_data_position == bitsPerChar - 1) {
+                context_data_position = 0;
+                context_data.push(getCharFromInt(context_data_val));
+                context_data_val = 0;
+              } else context_data_position++;
+              value = value >> 1;
+            }
+          }
+          context_enlargeIn--;
+          if (context_enlargeIn == 0) {
+            context_enlargeIn = Math.pow(2, context_numBits);
+            context_numBits++;
+          }
+          context_dictionary[context_wc] = context_dictSize++;
+          context_w = String(context_c);
+        }
+      }
+      if (context_w !== "") {
+        if (Object.prototype.hasOwnProperty.call(context_dictionaryToCreate, context_w)) {
+          if (context_w.charCodeAt(0) < 256) {
+            for (i = 0; i < context_numBits; i++) {
+              context_data_val = (context_data_val << 1);
+              if (context_data_position == bitsPerChar - 1) {
+                context_data_position = 0;
+                context_data.push(getCharFromInt(context_data_val));
+                context_data_val = 0;
+              } else context_data_position++;
+            }
+            value = context_w.charCodeAt(0);
+            for (i = 0; i < 8; i++) {
+              context_data_val = (context_data_val << 1) | (value & 1);
+              if (context_data_position == bitsPerChar - 1) {
+                context_data_position = 0;
+                context_data.push(getCharFromInt(context_data_val));
+                context_data_val = 0;
+              } else context_data_position++;
+              value = value >> 1;
+            }
+          } else {
+            value = 1;
+            for (i = 0; i < context_numBits; i++) {
+              context_data_val = (context_data_val << 1) | value;
+              if (context_data_position == bitsPerChar - 1) {
+                context_data_position = 0;
+                context_data.push(getCharFromInt(context_data_val));
+                context_data_val = 0;
+              } else context_data_position++;
+              value = 0;
+            }
+            value = context_w.charCodeAt(0);
+            for (i = 0; i < 16; i++) {
+              context_data_val = (context_data_val << 1) | (value & 1);
+              if (context_data_position == bitsPerChar - 1) {
+                context_data_position = 0;
+                context_data.push(getCharFromInt(context_data_val));
+                context_data_val = 0;
+              } else context_data_position++;
+              value = value >> 1;
+            }
+          }
+          context_enlargeIn--;
+          if (context_enlargeIn == 0) {
+            context_enlargeIn = Math.pow(2, context_numBits);
+            context_numBits++;
+          }
+          delete context_dictionaryToCreate[context_w];
+        } else {
+          value = context_dictionary[context_w];
+          for (i = 0; i < context_numBits; i++) {
+            context_data_val = (context_data_val << 1) | (value & 1);
+            if (context_data_position == bitsPerChar - 1) {
+              context_data_position = 0;
+              context_data.push(getCharFromInt(context_data_val));
+              context_data_val = 0;
+            } else context_data_position++;
+            value = value >> 1;
+          }
+        }
+        context_enlargeIn--;
+        if (context_enlargeIn == 0) {
+          context_enlargeIn = Math.pow(2, context_numBits);
+          context_numBits++;
+        }
+      }
+      value = 2;
+      for (i = 0; i < context_numBits; i++) {
+        context_data_val = (context_data_val << 1) | (value & 1);
+        if (context_data_position == bitsPerChar - 1) {
+          context_data_position = 0;
+          context_data.push(getCharFromInt(context_data_val));
+          context_data_val = 0;
+        } else context_data_position++;
+        value = value >> 1;
+      }
+      while (true) {
+        context_data_val = (context_data_val << 1);
+        if (context_data_position == bitsPerChar - 1) {
+          context_data.push(getCharFromInt(context_data_val));
+          break;
+        } else context_data_position++;
+      }
+      return context_data.join('');
+    },
+    _decompress: function(length, resetValue, getNextValue) {
+      var dictionary = [], next, enlargeIn = 4, dictSize = 4,
+        numBits = 3, entry = "", result = [], i, w, bits,
+        resb, maxpower, power, c,
+        data = { val: getNextValue(0), position: resetValue, index: 1 };
+      for (i = 0; i < 3; i += 1) dictionary[i] = i;
+      bits = 0; maxpower = Math.pow(2, 2); power = 1;
+      while (power != maxpower) {
+        resb = data.val & data.position;
+        data.position >>= 1;
+        if (data.position == 0) {
+          data.position = resetValue;
+          data.val = getNextValue(data.index++);
+        }
+        bits |= (resb > 0 ? 1 : 0) * power;
+        power <<= 1;
+      }
+      switch (next = bits) {
+        case 0:
+          bits = 0; maxpower = Math.pow(2, 8); power = 1;
+          while (power != maxpower) {
+            resb = data.val & data.position;
+            data.position >>= 1;
+            if (data.position == 0) {
+              data.position = resetValue;
+              data.val = getNextValue(data.index++);
+            }
+            bits |= (resb > 0 ? 1 : 0) * power;
+            power <<= 1;
+          }
+          c = f(bits); break;
+        case 1:
+          bits = 0; maxpower = Math.pow(2, 16); power = 1;
+          while (power != maxpower) {
+            resb = data.val & data.position;
+            data.position >>= 1;
+            if (data.position == 0) {
+              data.position = resetValue;
+              data.val = getNextValue(data.index++);
+            }
+            bits |= (resb > 0 ? 1 : 0) * power;
+            power <<= 1;
+          }
+          c = f(bits); break;
+        case 2: return "";
+      }
+      dictionary[3] = c; w = c; result.push(c);
+      while (true) {
+        if (data.index > length) return "";
+        bits = 0; maxpower = Math.pow(2, numBits); power = 1;
+        while (power != maxpower) {
+          resb = data.val & data.position;
+          data.position >>= 1;
+          if (data.position == 0) {
+            data.position = resetValue;
+            data.val = getNextValue(data.index++);
+          }
+          bits |= (resb > 0 ? 1 : 0) * power;
+          power <<= 1;
+        }
+        switch (c = bits) {
+          case 0:
+            bits = 0; maxpower = Math.pow(2, 8); power = 1;
+            while (power != maxpower) {
+              resb = data.val & data.position;
+              data.position >>= 1;
+              if (data.position == 0) {
+                data.position = resetValue;
+                data.val = getNextValue(data.index++);
+              }
+              bits |= (resb > 0 ? 1 : 0) * power;
+              power <<= 1;
+            }
+            dictionary[dictSize++] = f(bits);
+            c = dictSize - 1; enlargeIn--; break;
+          case 1:
+            bits = 0; maxpower = Math.pow(2, 16); power = 1;
+            while (power != maxpower) {
+              resb = data.val & data.position;
+              data.position >>= 1;
+              if (data.position == 0) {
+                data.position = resetValue;
+                data.val = getNextValue(data.index++);
+              }
+              bits |= (resb > 0 ? 1 : 0) * power;
+              power <<= 1;
+            }
+            dictionary[dictSize++] = f(bits);
+            c = dictSize - 1; enlargeIn--; break;
+          case 2: return result.join('');
+        }
+        if (enlargeIn == 0) {
+          enlargeIn = Math.pow(2, numBits);
+          numBits++;
+        }
+        if (dictionary[c]) {
+          entry = dictionary[c];
+        } else {
+          if (c === dictSize) entry = w + w.charAt(0);
+          else return null;
+        }
+        result.push(entry);
+        dictionary[dictSize++] = w + entry.charAt(0);
+        enlargeIn--; w = entry;
+        if (enlargeIn == 0) {
+          enlargeIn = Math.pow(2, numBits);
+          numBits++;
+        }
+      }
+    }
+  };
+  return LZString;
+})();
+
+// ============================================================
+//  存檔解碼器主邏輯
+// ============================================================
+let currentSave = null;       // 解碼後的存檔物件
+let currentFormat = null;     // 'RPG1' 或 'RPG2'
+let originalJson = null;      // 原始 JSON 字串（還原用）
+
+// 顯示訊息
+function showMessage(msg, type = 'info') {
+  const box = document.getElementById('messageBox');
+  box.innerHTML = `<div class="info-box ${type}">${msg}</div>`;
+}
+
+// 清空
+function clearAll() {
+  document.getElementById('inputCode').value = '';
+  document.getElementById('outputCode').value = '';
+  document.getElementById('messageBox').innerHTML = '';
+  document.getElementById('resultArea').style.display = 'none';
+  currentSave = null;
+  currentFormat = null;
+  originalJson = null;
+}
+
+// 從剪貼簿貼上
+async function pasteFromClipboard() {
+  try {
+    const text = await navigator.clipboard.readText();
+    document.getElementById('inputCode').value = text;
+  } catch(e) {
+    showMessage('無法讀取剪貼簿，請手動貼上', 'warn');
+  }
+}
+
+// ============================================================
+//  解碼
+// ============================================================
+function decodeSave() {
+  const code = document.getElementById('inputCode').value.trim();
+  if (!code) { showMessage('請先貼上分享碼', 'error'); return; }
+
+  let json, format;
+  if (code.startsWith('RPG2:')) {
+    format = 'RPG2';
+    try {
+      json = LZString.decompressFromBase64(code.slice(5));
+    } catch(e) {
+      showMessage('解壓失敗：' + e.message, 'error'); return;
+    }
+  } else if (code.startsWith('RPG1:')) {
+    format = 'RPG1';
+    try {
+      json = LZString.decompressFromBase64(code.slice(5));
+    } catch(e) {
+      showMessage('解壓失敗：' + e.message, 'error'); return;
+    }
+  } else {
+    showMessage('分享碼格式錯誤（缺少 RPG1: 或 RPG2: 前綴）', 'error');
+    return;
+  }
+
+  if (!json) { showMessage('解壓失敗：資料為空或損壞', 'error'); return; }
+
+  try {
+    currentSave = JSON.parse(json);
+    currentFormat = format;
+    originalJson = json;
+    showMessage(`✅ 解碼成功！格式：${format}｜原始 ${code.length} 字元｜JSON ${json.length} 字元`, 'success');
+    renderEditor();
+    renderRaw();
+    renderStats();
+    document.getElementById('resultArea').style.display = 'block';
+  } catch(e) {
+    showMessage('JSON 解析失敗：' + e.message, 'error');
+  }
+}
+
+// ============================================================
+//  渲染編輯器
+// ============================================================
+function renderEditor() {
+  const c = document.getElementById('editorContent');
+  const s = currentSave;
+  let html = '';
+
+  // ── 基本資料 ──
+  html += `<div class="section-header" onclick="toggleSection(this)">▼ 基本資料</div>`;
+  html += `<div class="section-body">`;
+  html += editorRow('玩家名稱', 'playerName', s.playerName, 'text');
+  html += editorRow('職業類型', 'roleType', s.roleType, 'number');
+  html += editorRow('職業名稱', 'roleName', s.roleName, 'text');
+  html += editorRow('等級', 'level', s.level, 'number');
+  html += editorRow('經驗', 'exp', s.exp, 'number');
+  html += editorRow('升級所需經驗', 'expNeeded', s.expNeeded, 'number');
+  html += `</div>`;
+
+  // ── 屬性 ──
+  html += `<div class="section-header" onclick="toggleSection(this)">▼ 屬性</div>`;
+  html += `<div class="section-body">`;
+  html += editorRow('最大 HP', 'maxHp', s.maxHp, 'number');
+  html += editorRow('目前 HP', 'hp', s.hp, 'number');
+  html += editorRow('攻擊力', 'atk', s.atk, 'number');
+  html += editorRow('防禦力', 'def', s.def, 'number');
+  html += editorRow('爆擊率 %', 'critRate', s.critRate, 'number');
+  html += editorRow('爆擊傷害 %', 'critDmg', s.critDmg, 'number');
+  html += editorRow('吸血 %', 'lifesteal', s.lifesteal, 'number');
+  html += editorRow('閃避 %', 'playerDodge', s.playerDodge, 'number');
+  html += `</div>`;
+
+  // ── 資源 ──
+  html += `<div class="section-header" onclick="toggleSection(this)">▼ 資源</div>`;
+  html += `<div class="section-body">`;
+  html += editorRow('金幣', 'money', s.money, 'number');
+  html += editorRow('藥水', 'potion', s.potion, 'number');
+  html += editorRow('經驗加成 %', 'playexp', s.playexp, 'number');
+  html += `</div>`;
+
+  // ── 進度 ──
+  html += `<div class="section-header" onclick="toggleSection(this)">▼ 進度</div>`;
+  html += `<div class="section-body">`;
+  html += editorRow('章節', 'chapter', s.chapter, 'number');
+  html += editorRow('擊殺數', 'killCount', s.killCount, 'number');
+  html += editorRow('回合數', 'runCount', s.runCount, 'number');
+  html += editorRow('深淵最高', 'abyssBest', s.abyssBest, 'number');
+  html += editorRow('突破等級', 'breakthroughLevel', s.breakthroughLevel, 'number');
+  html += editorRow('突破點', 'breakthroughPoints', s.breakthroughPoints, 'number');
+  html += editorRow('職業等級', 'roleLevel', s.roleLevel, 'number');
+  html += `</div>`;
+
+  // ── 商店等級 ──
+  html += `<div class="section-header" onclick="toggleSection(this)">▼ 商店強化等級</div>`;
+  html += `<div class="section-body">`;
+  html += editorRow('武器強化', 'swordLevel', s.swordLevel, 'number');
+  html += editorRow('護甲強化', 'shieldLevel', s.shieldLevel, 'number');
+  html += editorRow('惡魔契約', 'contractLevel', s.contractLevel, 'number');
+  html += editorRow('經驗秘典', 'expShopLevel', s.expShopLevel, 'number');
+  html += `</div>`;
+
+  // ── 快速操作 ──
+  html += `<div class="section-header" onclick="toggleSection(this)">▼ 快速操作</div>`;
+  html += `<div class="section-body" style="padding:10px;">
+    <button class="small gold" onclick="quickAction('maxHp9999')">💪 滿血</button>
+    <button class="small gold" onclick="quickAction('money')">💰 金幣 +100萬</button>
+    <button class="small" onclick="quickAction('resetHp')">❤️ 修復負數 HP</button>
+    <button class="small" onclick="quickAction('level')">⭐ 等級 +100</button>
+    <button class="small danger" onclick="quickAction('resetContract')">🔻 契約歸零</button>
+  </div>`;
+
+  // ── 進階：完整 JSON 編輯 ──
+  html += `<div class="section-header" onclick="toggleSection(this)">▼ 進階：直接編輯 JSON（小心使用）</div>`;
+  html += `<div class="section-body" style="padding:10px; display:none;">
+    <div class="subtitle" style="margin-bottom:6px;">直接修改下面的 JSON，按「套用」會覆蓋所有編輯</div>
+    <textarea id="jsonEditor" style="min-height:300px;">${JSON.stringify(currentSave, null, 2)}</textarea>
+    <button class="small gold" onclick="applyJsonEdit()">✅ 套用 JSON</button>
+  </div>`;
+
+  c.innerHTML = html;
+}
+
+function editorRow(label, key, value, type = 'text') {
+  return `<div class="editor-row">
+    <label>${label}</label>
+    <input type="${type}" data-key="${key}" value="${value === undefined ? '' : value}"
+      oninput="updateField('${key}', this.value, '${type}')">
+  </div>`;
+}
+
+// 更新欄位
+function updateField(key, value, type) {
+  if (!currentSave) return;
+  if (type === 'number') {
+    const n = parseFloat(value);
+    currentSave[key] = isNaN(n) ? 0 : n;
+  } else {
+    currentSave[key] = value;
+  }
+}
+
+// 折疊區塊
+function toggleSection(header) {
+  const body = header.nextElementSibling;
+  if (!body) return;
+  if (body.style.display === 'none') {
+    body.style.display = 'block';
+    header.textContent = header.textContent.replace('▶', '▼');
+  } else {
+    body.style.display = 'none';
+    header.textContent = header.textContent.replace('▼', '▶');
+  }
+}
+
+// 快速操作
+function quickAction(action) {
+  if (!currentSave) return;
+  const s = currentSave;
+  switch(action) {
+    case 'maxHp9999':
+      s.hp = s.maxHp;
+      break;
+    case 'money':
+      s.money = (s.money || 0) + 1000000;
+      break;
+    case 'resetHp':
+      if (s.maxHp < 100) s.maxHp = 100;
+      if (s.hp < 1) s.hp = s.maxHp;
+      break;
+    case 'level':
+      s.level = (s.level || 1) + 100;
+      break;
+    case 'resetContract':
+      s.contractLevel = 0;
+      break;
+  }
+  renderEditor();
+  renderRaw();
+  showMessage(`✅ 已套用「${action}」`, 'success');
+}
+
+// 套用 JSON 編輯
+function applyJsonEdit() {
+  try {
+    const json = document.getElementById('jsonEditor').value;
+    currentSave = JSON.parse(json);
+    renderEditor();
+    renderRaw();
+    renderStats();
+    showMessage('✅ JSON 已套用', 'success');
+  } catch(e) {
+    showMessage('JSON 格式錯誤：' + e.message, 'error');
+  }
+}
+
+// 還原編輯
+function resetEdits() {
+  if (!originalJson) return;
+  currentSave = JSON.parse(originalJson);
+  renderEditor();
+  renderRaw();
+  renderStats();
+  showMessage('↺ 已還原到解碼時的狀態', 'info');
+}
+
+// ============================================================
+//  渲染原始 JSON
+// ============================================================
+function renderRaw() {
+  document.getElementById('rawJson').textContent = JSON.stringify(currentSave, null, 2);
+}
+
+function copyRawJson() {
+  const text = JSON.stringify(currentSave, null, 2);
+  navigator.clipboard.writeText(text).then(() => {
+    showMessage('📋 JSON 已複製', 'success');
+  }).catch(() => {
+    showMessage('複製失敗', 'error');
+  });
+}
+
+// ============================================================
+//  渲染統計
+// ============================================================
+function renderStats() {
+  const s = currentSave;
+  const c = document.getElementById('statsContent');
+
+  // 各部分大小
+  const parts = {
+    inventory: JSON.stringify(s.inventory || []).length,
+    equipment: JSON.stringify(s.equipment || {}).length,
+    fruits: JSON.stringify(s.fruits || {}).length,
+    pets: JSON.stringify(s.pets || {}).length,
+    talents: JSON.stringify(s.talents || {}).length,
+    roleLevels: JSON.stringify(s.roleLevels || {}).length,
+    achievements: JSON.stringify(s.achievements || {}).length,
+  };
+  const total = JSON.stringify(s).length;
+  let other = total;
+  for (const v of Object.values(parts)) other -= v;
+  parts.其他 = other;
+  parts.總計 = total;
+
+  let html = `<div class="panel-title">📊 存檔各部分大小</div>`;
+  html += `<div class="subtitle" style="margin-bottom:10px;">總大小：${total} 字元</div>`;
+
+  for (const [k, v] of Object.entries(parts)) {
+    const pct = total > 0 ? Math.round(v / total * 100) : 0;
+    const barColor = pct > 50 ? '#f44336' : pct > 20 ? '#ff9800' : '#4caf50';
+    html += `<div class="stat-row">
+      <span>${k}</span>
+      <span class="val">${v} 字元 (${pct}%)</span>
+    </div>
+    <div style="background:#1a1a25; height:6px; border-radius:3px; overflow:hidden; margin-bottom:8px;">
+      <div style="background:${barColor}; height:100%; width:${pct}%;"></div>
+    </div>`;
+  }
+
+  // 背包統計
+  if (s.inventory) {
+    const byRarity = {};
+    s.inventory.forEach(it => {
+      byRarity[it.rarity] = (byRarity[it.rarity] || 0) + 1;
+    });
+    html += `<div class="panel-title" style="margin-top:16px;">🎽 背包裝備分布</div>`;
+    for (const [r, count] of Object.entries(byRarity)) {
+      const names = ['', '普通', '精良', '稀有', '史詩', '傳說', '神話'];
+      html += `<div class="stat-row">
+        <span>${names[r] || r}</span>
+        <span class="val">${count} 件</span>
+      </div>`;
+    }
+  }
+
+  c.innerHTML = html;
+}
+
+// ============================================================
+//  重新編碼
+// ============================================================
+function encodeSave() {
+  if (!currentSave) { showMessage('沒有存檔可以編碼', 'error'); return; }
+  try {
+    const json = JSON.stringify(currentSave);
+    const compressed = LZString.compressToBase64(json);
+    const prefix = currentFormat === 'RPG2' ? 'RPG2:' : 'RPG1:';
+    const code = prefix + compressed;
+    document.getElementById('outputCode').value = code;
+
+    const saved = Math.round((1 - code.length / json.length) * 100);
+    showMessage(`✅ 編碼成功！JSON ${json.length} → 分享碼 ${code.length} 字元（省 ${saved}%）`, 'success');
+  } catch(e) {
+    showMessage('編碼失敗：' + e.message, 'error');
+  }
+}
+
+function copyOutput() {
+  const ta = document.getElementById('outputCode');
+  if (!ta.value) { showMessage('請先按「重新編碼」', 'warn'); return; }
+  ta.select();
+  navigator.clipboard.writeText(ta.value).then(() => {
+    showMessage('📋 分享碼已複製到剪貼簿！', 'success');
+  }).catch(() => {
+    try {
+      document.execCommand('copy');
+      showMessage('📋 分享碼已複製！', 'success');
+    } catch(e) {
+      showMessage('複製失敗，請手動複製', 'error');
+    }
+  });
+}
+
+// ============================================================
+//  分頁切換
+// ============================================================
+function switchTab(tabName) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+
+  document.getElementById('tab-editor').style.display = tabName === 'editor' ? 'block' : 'none';
+  document.getElementById('tab-raw').style.display = tabName === 'raw' ? 'block' : 'none';
+  document.getElementById('tab-stats').style.display = tabName === 'stats' ? 'block' : 'none';
+}
+
+// ============================================================
+//  自動解碼（貼上即解）
+// ============================================================
+document.getElementById('inputCode').addEventListener('input', debounce(() => {
+  const code = document.getElementById('inputCode').value.trim();
+  if (code.length > 20 && (code.startsWith('RPG1:') || code.startsWith('RPG2:'))) {
+    decodeSave();
+  }
+}, 500));
+
+function debounce(fn, delay) {
+  let timer;
+  return function() {
+    clearTimeout(timer);
+    timer = setTimeout(fn, delay);
+  };
+}
+</script>
+</body>
+</html>
