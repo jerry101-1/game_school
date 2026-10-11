@@ -15,25 +15,14 @@ function closeShop() { updateTownUI(); showScreen('screen-town'); }
 // ============================================================
 //  ★ 商店批量購買
 // ============================================================
-let shopBatch = 1;  // 1 / 5 / 10 / 'max'
+let shopBatch = 1;
 
 function setShopBatch(n) {
   shopBatch = n;
   document.querySelectorAll('.batch-btn').forEach(b => {
     b.classList.toggle('active', b.dataset.batch === String(n));
   });
-  renderShop();  // 重繪，讓價格顯示更新
-}
-
-// 計算「買 n 個要多少錢、買得起幾個」
-function calcBatch(item) {
-  const unitCost = item.cost;
-  let count = shopBatch === 'max' ? Infinity : shopBatch;
-  // 買得起的上限
-  const affordable = Math.floor(S.money / unitCost);
-  if (count > affordable) count = affordable;
-  const totalCost = count * unitCost;
-  return { count, totalCost, affordable };
+  renderShop();
 }
 
 function renderShop() {
@@ -48,52 +37,30 @@ function renderShop() {
       : `Lv.${S.swordLevel} → Lv.${S.swordLevel+1}（+${5 + S.swordLevel * 2} 攻擊）`,
     cost: () => S.swordLevel === 0 ? 50 : 50 + S.swordLevel * 30,
     maxCount: () => {
-        let lv = S.contractLevel, hp = S.maxHp, money = S.money, cnt = 0;
-        while (true) {
-          const c = lv === 0 ? 500 : 500 + lv * 500;
-          const loseHP = lv === 0 ? 100 : 100 + lv * 50;
-          // ★ 保護：至少保留 100 HP
-          if (money < c || hp - loseHP < 100) break;
-          money -= c; hp -= loseHP; lv++; cnt++;
-          if (cnt > 999) break;
-        }
-        return cnt;
-      },
-
+      let lv = S.swordLevel, money = S.money, cnt = 0;
+      while (true) {
+        const c = lv === 0 ? 50 : 50 + lv * 30;
+        if (money < c) break;
+        money -= c; lv++; cnt++;
+        if (cnt > 999) break;
+      }
+      return cnt;
+    },
     singleAction: () => {
-        const cost = S.contractLevel === 0 ? 500 : 500 + S.contractLevel * 500;
-        const sa = S.contractLevel === 0 ? 250 : 250 + S.contractLevel * 100;
-        const sl = S.contractLevel === 0 ? 100 : 100 + S.contractLevel * 50;
-        // ★ 保護：至少要保留 100 HP
-        if (S.maxHp - sl < 100) {
-          log('⚠ 最大 HP 不足，無法再簽約！（至少需保留 100 HP）', 'lose');
-          return;
-        }
-        S.atk += sa; S.maxHp -= sl;
-        if (S.hp > effMaxHp()) S.hp = effMaxHp();
-        S.money -= cost; S.contractLevel++;
-      },
-      batchAction: (n) => {
-        let totalAtk = 0;
-        let actualCount = 0;
-        for (let i = 0; i < n; i++) {
-          const cost = S.contractLevel === 0 ? 500 : 500 + S.contractLevel * 500;
-          const sa = S.contractLevel === 0 ? 250 : 250 + S.contractLevel * 100;
-          const sl = S.contractLevel === 0 ? 100 : 100 + S.contractLevel * 50;
-          // ★ 保護：至少要保留 100 HP
-          if (S.maxHp - sl < 100) break;
-          S.atk += sa; S.maxHp -= sl;
-          S.money -= cost; S.contractLevel++;
-          totalAtk += sa;
-          actualCount++;
-        }
-        if (S.hp > effMaxHp()) S.hp = effMaxHp();
-        if (actualCount === 0) {
-          log('⚠ 最大 HP 不足，無法再簽約！', 'lose');
-          return '';
-        }
-        return `簽訂 ${actualCount} 層契約！攻擊共 +${totalAtk}`;
-      },
+      const cost = S.swordLevel === 0 ? 50 : 50 + S.swordLevel * 30;
+      const gain = S.swordLevel === 0 ? 5 : 5 + S.swordLevel * 2;
+      S.atk += gain; S.money -= cost; S.swordLevel++;
+    },
+    batchAction: (n) => {
+      let totalGain = 0;
+      for (let i = 0; i < n; i++) {
+        const cost = S.swordLevel === 0 ? 50 : 50 + S.swordLevel * 30;
+        const gain = S.swordLevel === 0 ? 5 : 5 + S.swordLevel * 2;
+        S.atk += gain; S.money -= cost; S.swordLevel++;
+        totalGain += gain;
+      }
+      return `武器強化 ${n} 次！攻擊力共 +${totalGain}（目前 ${S.atk}）`;
+    },
     logClass: 'win',
   });
 
@@ -178,7 +145,7 @@ function renderShop() {
         while (true) {
           const c = lv === 0 ? 500 : 500 + lv * 500;
           const loseHP = lv === 0 ? 100 : 100 + lv * 50;
-          if (money < c || hp <= loseHP + 10) break;
+          if (money < c || hp - loseHP < 100) break;
           money -= c; hp -= loseHP; lv++; cnt++;
           if (cnt > 999) break;
         }
@@ -188,22 +155,31 @@ function renderShop() {
         const cost = S.contractLevel === 0 ? 500 : 500 + S.contractLevel * 500;
         const sa = S.contractLevel === 0 ? 250 : 250 + S.contractLevel * 100;
         const sl = S.contractLevel === 0 ? 100 : 100 + S.contractLevel * 50;
+        if (S.maxHp - sl < 100) {
+          log('⚠ 最大 HP 不足，無法再簽約！（至少需保留 100 HP）', 'lose');
+          return;
+        }
         S.atk += sa; S.maxHp -= sl;
         if (S.hp > effMaxHp()) S.hp = effMaxHp();
         S.money -= cost; S.contractLevel++;
       },
       batchAction: (n) => {
-        let totalAtk = 0;
+        let totalAtk = 0, actualCount = 0;
         for (let i = 0; i < n; i++) {
           const cost = S.contractLevel === 0 ? 500 : 500 + S.contractLevel * 500;
           const sa = S.contractLevel === 0 ? 250 : 250 + S.contractLevel * 100;
           const sl = S.contractLevel === 0 ? 100 : 100 + S.contractLevel * 50;
+          if (S.maxHp - sl < 100) break;
           S.atk += sa; S.maxHp -= sl;
           S.money -= cost; S.contractLevel++;
-          totalAtk += sa;
+          totalAtk += sa; actualCount++;
         }
         if (S.hp > effMaxHp()) S.hp = effMaxHp();
-        return `簽訂 ${n} 層契約！攻擊共 +${totalAtk}`;
+        if (actualCount === 0) {
+          log('⚠ 最大 HP 不足，無法再簽約！', 'lose');
+          return '';
+        }
+        return `簽訂 ${actualCount} 層契約！攻擊共 +${totalAtk}`;
       },
       logClass: 'skill-text',
     });
@@ -242,12 +218,12 @@ function renderShop() {
     });
   }
 
-  // ── 隨機裝備（不支援批量，因為是隨機）──
+  // ── 隨機裝備 ──
   items.push({
     name: '🛒 購買隨機裝備',
     desc: () => '依等級生成隨機裝備',
     cost: () => 200 + S.level * 20,
-    maxCount: () => 1,  // 只能買 1 個（避免背包爆掉）
+    maxCount: () => 1,
     singleAction: () => {
       const cost = 200 + S.level * 20;
       const item = genEquipment(S.level, pickRarity(S.level/5));
@@ -265,7 +241,7 @@ function renderShop() {
       return `購買 ${n} 件隨機裝備`;
     },
     logClass: 'win',
-    noBatch: true,  // 標記不支援批量
+    noBatch: true,
   });
 
   // ── 繪製清單 ──
@@ -274,30 +250,21 @@ function renderShop() {
   items.forEach(it => {
     const unitCost = it.cost();
     const maxCount = it.maxCount ? it.maxCount() : 1;
-
-    // 決定這次買幾個
     let count = shopBatch === 'max' ? maxCount : shopBatch;
     if (it.noBatch) count = Math.min(count, 1);
     if (count > maxCount) count = maxCount;
     if (count < 0) count = 0;
-
     const totalCost = unitCost * count;
     const canBuy = count > 0 && S.money >= totalCost;
 
     const row = document.createElement('div');
     row.className = 'shop-item';
 
-    // 顯示文字
     let countText = '';
-    if (shopBatch === 'max') {
-      countText = `（可買 ${maxCount} 個）`;
-    } else if (count > 0 && count !== shopBatch) {
-      countText = `（買 ${count} 個，金幣不足）`;
-    } else if (count > 0) {
-      countText = `（買 ${count} 個）`;
-    } else {
-      countText = `（金幣不足）`;
-    }
+    if (shopBatch === 'max') countText = `（可買 ${maxCount} 個）`;
+    else if (count > 0 && count !== shopBatch) countText = `（買 ${count} 個，金幣不足）`;
+    else if (count > 0) countText = `（買 ${count} 個）`;
+    else countText = `（金幣不足）`;
 
     row.innerHTML = `
       <div style="flex:1;">
@@ -305,7 +272,7 @@ function renderShop() {
         <div class="subtitle">${it.desc()}</div>
       </div>
       <div style="text-align:right;white-space:nowrap;">
-        <div class="cost">${totalCost} 金 <span class="buy-preview">${countText}</span></div>
+        <div class="cost">${totalCost.toLocaleString()} 金 <span class="buy-preview">${countText}</span></div>
         <button class="small" ${canBuy?'':'disabled'}>購買 ×${count}</button>
       </div>
     `;
@@ -317,13 +284,12 @@ function renderShop() {
         log(`${it.name} 完成！`, it.logClass || 'win');
       } else {
         const msg = it.batchAction(count);
-        log(`【批量】${msg}`, it.logClass || 'win');
+        if (msg) log(`【批量】${msg}`, it.logClass || 'win');
       }
       renderShop();
       updateTownUI();
       checkAchievements();
     };
-
     list.appendChild(row);
   });
 }
@@ -502,8 +468,6 @@ function renderEquip() {
 function equipItemById(uid) { const item = S.inventory.find(i => i.uid === uid); if (item) equipItem(item); }
 function sellItemById(uid) { const item = S.inventory.find(i => i.uid === uid); if (item) sellItem(item); }
 function unequipSlotById(slot) { unequipSlot(slot); }
-
-// 內部：裝備/卸下（真正執行）
 function equipItem(item) {
   const slot = item.slot;
   const old = S.equipment[slot];
@@ -559,12 +523,30 @@ function renderTalent() {
   html += renderBreakthroughSection();
   $('talentContent').innerHTML = html;
 }
+
 function renderBreakthroughSection() {
   const bkLv = S.breakthroughLevel || 0;
   const bkPt = S.breakthroughPoints || 0;
   const cost = breakthroughCost();
   const maxed = allTalentsMaxed();
   const canBreak = maxed && bkPt > 0 && S.money >= cost;
+
+  // 計算 Max 能升幾級
+  let maxLevels = 0;
+  if (maxed && bkPt > 0) {
+    let tempLv = bkLv, tempMoney = S.money, tempBp = bkPt;
+    while (tempBp > 0) {
+      const lvCost = tempLv < 50 ? 500 * (tempLv + 1) : 500 * 50 + 100 * (tempLv - 49);
+      if (tempMoney < lvCost) break;
+      tempMoney -= lvCost;
+      tempLv++;
+      tempBp--;
+      maxLevels++;
+      if (maxLevels > 10000) break;
+    }
+  }
+  const canBreakMax = maxed && bkPt > 0 && maxLevels > 0;
+
   let html = `<div class="talent-branch" style="border-color:#ff5252;background:linear-gradient(135deg,#151520,#2a1a1a);">
     <div class="talent-branch-title" style="color:#ff5252;">✦ 突破系統</div>
     <div class="stat-row">
@@ -577,16 +559,33 @@ function renderBreakthroughSection() {
     <div class="subtitle" style="margin-top:8px;color:#4fc3f7;">
       每級加成：攻擊/防禦/HP +2%、爆擊 +3%、爆傷 +5%、經驗/金幣 +3%
     </div>
-    <div style="margin-top:10px;">
+    <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:8px;">
       <button class="talent" style="background:#c62828;" ${canBreak?'':'disabled'} onclick="doBreakthrough()">
-        ✦ 突破提升（1 突破點 + ${cost} 金）
+        ✦ 突破提升（1 突破點 + ${cost.toLocaleString()} 金）
       </button>
-      <button class="talent" style="background:#8e24aa;" ${canBreak?'':'disabled'} onclick="doBreakthroughMax()">
-        ✦✦ 突破 Max（花光突破點）
+      <button class="talent" style="background:#8e24aa;" ${canBreakMax?'':'disabled'} onclick="doBreakthroughMax()">
+        ✦✦ 突破 Max（可升 ${maxLevels} 級）
       </button>
-    </div>
-    <div style="margin-top:14px;padding-top:10px;border-top:1px solid #2a2a3a;">
-      <div class="subtitle" style="margin-bottom:8px;">── 里程碑 ──</div>`;
+    </div>`;
+
+  // 突破點兌換區
+  if (bkPt >= 5) {
+    html += `<div style="margin-top:12px;padding-top:10px;border-top:1px solid #2a2a3a;">
+      <div class="subtitle" style="margin-bottom:8px;">── 突破點兌換 ──</div>
+      <div class="actions">
+        ${bkPt >= 10 ? `<button class="talent small" style="background:#f9a825;color:#111;" onclick="exchangeBreakthrough('money')">
+          💰 10 突破點 → 50,000 金幣
+        </button>` : ''}
+        ${bkPt >= 5 ? `<button class="talent small" style="background:#00897b;" onclick="exchangeBreakthrough('potion')">
+          🧪 5 突破點 → 3 藥水
+        </button>` : ''}
+      </div>
+    </div>`;
+  }
+
+  html += `<div style="margin-top:14px;padding-top:10px;border-top:1px solid #2a2a3a;">
+    <div class="subtitle" style="margin-bottom:8px;">── 里程碑 ──</div>`;
+
   for (const [lv, ms] of Object.entries(BREAKTHROUGH_MILESTONES)) {
     const unlocked = S.breakthroughMilestones && S.breakthroughMilestones[ms.key];
     const reached = bkLv >= parseInt(lv);
@@ -602,6 +601,7 @@ function renderBreakthroughSection() {
   html += `</div></div>`;
   return html;
 }
+
 function upgradeTalent(id) {
   const t = TALENTS[id];
   if (!t) return;
@@ -731,7 +731,7 @@ function goAdventure() {
   setTimeout(nextEncounter, 500);
 }
 function updateAdventureUI() {
-  $('advHp').textContent = `${S.hp}/${effMaxHp()}`;
+  $('advHp').textContent = `${Math.max(0,S.hp)}/${effMaxHp()}`;
   $('advMoney').textContent = S.money;
   $('advExp').textContent = `${S.exp}/${S.expNeeded}`;
   $('advPotion').textContent = S.potion;
@@ -900,8 +900,10 @@ function recalcBaseStats() {
   S.def = role.def;
   S.atk += S.contractLevel * 250;
   S.maxHp -= S.contractLevel * 100;
+  if (S.maxHp < 100) S.maxHp = 100;  // ★ 保護
   for (const slot of ['weapon','armor','accessory']) applyEquipStats(S.equipment[slot], 1);
   if (S.hp > effMaxHp()) S.hp = effMaxHp();
+  if (S.hp < 1) S.hp = 1;
 }
 
 // ── 武器合成 ──
