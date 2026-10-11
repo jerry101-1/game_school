@@ -48,33 +48,52 @@ function renderShop() {
       : `Lv.${S.swordLevel} → Lv.${S.swordLevel+1}（+${5 + S.swordLevel * 2} 攻擊）`,
     cost: () => S.swordLevel === 0 ? 50 : 50 + S.swordLevel * 30,
     maxCount: () => {
-      // 武器強化每次只能 1 級（因為花費會變），Max = 能升幾級就升幾級
-      let lv = S.swordLevel, money = S.money, cnt = 0;
-      while (true) {
-        const c = lv === 0 ? 50 : 50 + lv * 30;
-        if (money < c) break;
-        money -= c;
-        lv++;
-        cnt++;
-        if (cnt > 999) break;
-      }
-      return cnt;
-    },
+        let lv = S.contractLevel, hp = S.maxHp, money = S.money, cnt = 0;
+        while (true) {
+          const c = lv === 0 ? 500 : 500 + lv * 500;
+          const loseHP = lv === 0 ? 100 : 100 + lv * 50;
+          // ★ 保護：至少保留 100 HP
+          if (money < c || hp - loseHP < 100) break;
+          money -= c; hp -= loseHP; lv++; cnt++;
+          if (cnt > 999) break;
+        }
+        return cnt;
+      },
+
     singleAction: () => {
-      const cost = S.swordLevel === 0 ? 50 : 50 + S.swordLevel * 30;
-      const gain = S.swordLevel === 0 ? 5 : 5 + S.swordLevel * 2;
-      S.atk += gain; S.money -= cost; S.swordLevel++;
-    },
-    batchAction: (n) => {
-      let totalGain = 0;
-      for (let i = 0; i < n; i++) {
-        const cost = S.swordLevel === 0 ? 50 : 50 + S.swordLevel * 30;
-        const gain = S.swordLevel === 0 ? 5 : 5 + S.swordLevel * 2;
-        S.atk += gain; S.money -= cost; S.swordLevel++;
-        totalGain += gain;
-      }
-      return `武器強化 ${n} 次！攻擊力共 +${totalGain}（目前 ${S.atk}）`;
-    },
+        const cost = S.contractLevel === 0 ? 500 : 500 + S.contractLevel * 500;
+        const sa = S.contractLevel === 0 ? 250 : 250 + S.contractLevel * 100;
+        const sl = S.contractLevel === 0 ? 100 : 100 + S.contractLevel * 50;
+        // ★ 保護：至少要保留 100 HP
+        if (S.maxHp - sl < 100) {
+          log('⚠ 最大 HP 不足，無法再簽約！（至少需保留 100 HP）', 'lose');
+          return;
+        }
+        S.atk += sa; S.maxHp -= sl;
+        if (S.hp > effMaxHp()) S.hp = effMaxHp();
+        S.money -= cost; S.contractLevel++;
+      },
+      batchAction: (n) => {
+        let totalAtk = 0;
+        let actualCount = 0;
+        for (let i = 0; i < n; i++) {
+          const cost = S.contractLevel === 0 ? 500 : 500 + S.contractLevel * 500;
+          const sa = S.contractLevel === 0 ? 250 : 250 + S.contractLevel * 100;
+          const sl = S.contractLevel === 0 ? 100 : 100 + S.contractLevel * 50;
+          // ★ 保護：至少要保留 100 HP
+          if (S.maxHp - sl < 100) break;
+          S.atk += sa; S.maxHp -= sl;
+          S.money -= cost; S.contractLevel++;
+          totalAtk += sa;
+          actualCount++;
+        }
+        if (S.hp > effMaxHp()) S.hp = effMaxHp();
+        if (actualCount === 0) {
+          log('⚠ 最大 HP 不足，無法再簽約！', 'lose');
+          return '';
+        }
+        return `簽訂 ${actualCount} 層契約！攻擊共 +${totalAtk}`;
+      },
     logClass: 'win',
   });
 
