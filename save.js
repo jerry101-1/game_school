@@ -77,47 +77,92 @@ function renderCloud() {
   `;
 }
 
-// ── 跨電腦存檔（壓縮版） ──
-function exportCloudSave() {
-  try {
-    const save = {...S, monster:null, inBattle:false, gameOver:false};
-    const json = JSON.stringify(save);
-    // ★ LZ-String 壓縮 → Base64（比單純 Base64 縮 70%）
-    const compressed = LZString.compressToBase64(json);
-    const code = 'RPG1:' + compressed;
-    $('cloudExport').value = code;
-    const origLen = json.length;
-    const codeLen = code.length;
-    const saved = Math.round((1 - codeLen/origLen) * 100);
-    log(`☁ 分享碼已產生（原始 ${origLen} → 壓縮 ${codeLen} 字元，省 ${saved}%）`, 'system');
-  } catch(e) { log('產生失敗：' + e.message, 'lose'); }
+// ── 裝備精簡：匯出時把裝備轉成短格式 ──
+function compressItem(item) {
+  if (!item) return null;
+  return {
+    r: item.rarity,
+    l: item.level,
+    s: item.slot,
+    a: item.affixes.map(x => [x.stat, x.val]),
+  };
 }
 
-function copyCloudSave() {
-  const ta = $('cloudExport');
-  if (!ta || !ta.value) { log('請先產生分享碼！', 'lose'); return; }
-  ta.select();
+// ── 裝備還原 ──
+function decompressItem(short) {
+  if (!short) return null;
+  const item = genEquipment(short.l, short.r);
+  item.slot = short.s;
+  item.name = SLOT_DATA[short.s].pre[rand(0, SLOT_DATA[short.s].pre.length-1)]
+            + SLOT_DATA[short.s].base[rand(0, SLOT_DATA[short.s].base.length-1)];
+  item.affixes = short.a.map(([stat, val]) => {
+    const pool = AFFIX_POOL.find(p => p.stat === stat);
+    const label = pool ? `${pool.label} +${val}${pool.pct?'%':''}` : `${stat} +${val}`;
+    return { stat, val, label };
+  });
+  return item;
+}
+
+// ── 跨電腦存檔（組合壓縮版） ──
+function exportCloudSave() {
   try {
-    document.execCommand('copy');
-    log('📋 已複製到剪貼簿！', 'win');
-  } catch(e) { log('複製失敗，請手動複製。', 'lose'); }
+    const save = JSON.parse(JSON.stringify({...S, monster:null, inBattle:false, gameOver:false}));
+
+    // 背包只保留稀有度 ≥ 3 的，並壓縮
+    if (save.inventory) {
+      save.inventory = save.inventory
+        .filter(it => it.rarity >= 3)
+        .map(compressItem);
+    }
+    // 已裝備的壓縮
+    if (save.equipment) {
+      for (const slot of ['weapon','armor','accessory']) {
+        save.equipment[slot] = compressItem(save.equipment[slot]);
+      }
+    }
+
+    const json = JSON.stringify(save);
+    const compressed = LZString.compressToBase64(json);
+    $('cloudExport').value = 'RPG2:' + compressed;
+
+    const saved = Math.round((1 - (compressed.length+5)/json.length) * 100);
+    log(`☁ 分享碼已產生（省 ${saved}%）`, 'system');
+  } catch(e) { log('產生失敗：' + e.message, 'lose'); }
 }
 
 function importCloudSave() {
   const code = $('cloudImport').value.trim();
   if (!code) { log('請貼上分享碼！', 'lose'); return; }
-  if (!code.startsWith('RPG1:')) {
-    log('分享碼格式錯誤（缺少 RPG1: 前綴）', 'lose');
+
+  let json;
+  if (code.startsWith('RPG2:')) {
+    json = LZString.decompressFromBase64(code.slice(5));
+  } else if (code.startsWith('RPG1:')) {
+    json = LZString.decompressFromBase64(code.slice(5));
+  } else {
+    log('分享碼格式錯誤', 'lose');
     return;
   }
+
+  if (!json) { log('解壓失敗，分享碼可能損壞。', 'lose'); return; }
   if (!confirm('匯入會覆蓋目前進度，確定嗎？')) return;
+
   try {
-    const compressed = code.slice(5);  // 去掉 "RPG1:"
-    const json = LZString.decompressFromBase64(compressed);
-    if (!json) { log('解壓失敗，分享碼可能損壞。', 'lose'); return; }
     const p = JSON.parse(json);
+
+    // 還原裝備
+    if (p.inventory && p.inventory[0] && p.inventory[0].r !== undefined) {
+      p.inventory = p.inventory.map(decompressItem).filter(Boolean);
+    }
+    if (p.equipment) {
+      for (const slot of ['weapon','armor','accessory']) {
+        if (p.equipment[slot] && p.equipment[slot].r !== undefined) {
+          p.equipment[slot] = decompressItem(p.equipment[slot]);
+        }
+      }
+    }
+
     Object.assign(S, p);
-    // 修復欄位
     if (!S.dungeon) S.dungeon = { active:null, floor:0 };
     if (!S.guild) S.guild = { id:null, contrib:0, questProgress:{}, questClaimed:{} };
     if (!S.pets) S.pets = {};
@@ -131,6 +176,7 @@ function importCloudSave() {
     showScreen('screen-town');
   } catch(e) { log('匯入失敗：' + e.message, 'lose'); }
 }
+
 // 快速載入雲端（開場畫面用）
 function loadFromCloud() {
   openCloud();
