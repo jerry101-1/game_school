@@ -27,11 +27,11 @@ const S = {
   // 深淵
   abyssFloor:0, abyssBest:0, inAbyss:false,
 
-  // ★ 新：副本 / 公會 / 寵物
-  dungeon: { active:null, floor:0, cleared:0 },   // 當前副本進度
-  guild: { id:null, contrib:0, questProgress:{} },  // 公會
-  pets: {},        // 擁有的寵物 {petId: {level, exp}}
-  activePet: null, // 出戰中的寵物 id
+  // 副本 / 公會 / 寵物
+  dungeon: { active:null, floor:0, cleared:0 },
+  guild: { id:null, contrib:0, questProgress:{}, questClaimed:{} },
+  pets: {},
+  activePet: null,
 
   // 連擊 / 成就
   combo:0, maxCombo:0, achievements:{},
@@ -136,9 +136,8 @@ function getGuildBonus() {
 // ── 寵物加成（被動）──
 function getPetBonus() {
   if (!S.activePet || !S.pets[S.activePet]) return {atkPct:0,exp:0,gold:0,crit:0,lifesteal:0,regen:0};
-  const p = PETS[S.activePet];
   const pet = S.pets[S.activePet];
-  const lvBonus = 1 + (pet.level - 1) * 0.05; // 每級 +5% 效果
+  const lvBonus = 1 + (pet.level - 1) * 0.05;
   const b = {atkPct:0,exp:0,gold:0,crit:0,lifesteal:0,regen:0};
   switch(S.activePet) {
     case 'goblin':  b.gold += 10 * lvBonus; break;
@@ -164,7 +163,8 @@ function effDef() {
 }
 function effMaxHp() {
   const t = getTalentBonus(), b = getBreakthroughBonus();
-  return Math.floor(S.maxHp * (1 + (t.hpPct + b.hpPct)/100));
+  const val = Math.floor(S.maxHp * (1 + (t.hpPct + b.hpPct)/100));
+  return Math.max(1, val);  // ★ 保護：最低 1 HP
 }
 function effDodge()    { return S.playerDodge + getTalentBonus().dodge; }
 function effCritRate() {
@@ -176,60 +176,89 @@ function effCritDmg() {
   return S.critDmg + t.critDmg + b.critDmg + g.critDmg;
 }
 
-// ── 突破花費（邊際遞減，避免後期天價）──
+// ── 突破花費（邊際遞減）──
 function breakthroughCost() {
   const lv = S.breakthroughLevel || 0;
-  // 前 50 級每級 +500，之後每級只 +100
   if (lv < 50) return 500 * (lv + 1);
   return 500 * 50 + 100 * (lv - 49);
 }
 
-// ── 突破（一次升多級）──
+// ── 突破：升 1 級 ──
+function doBreakthrough() {
+  if (!allTalentsMaxed()) { log('需要先將所有天賦點滿！', 'lose'); return; }
+  if ((S.breakthroughPoints || 0) <= 0) { log('沒有突破點！', 'lose'); return; }
+  const cost = breakthroughCost();
+  if (S.money < cost) { log(`金幣不足！需要 ${cost.toLocaleString()} 金。`, 'lose'); return; }
+  S.money -= cost;
+  S.breakthroughPoints--;
+  S.breakthroughLevel = (S.breakthroughLevel || 0) + 1;
+  const ms = BREAKTHROUGH_MILESTONES[S.breakthroughLevel];
+  if (ms && !S.breakthroughMilestones[ms.key]) {
+    S.breakthroughMilestones[ms.key] = true;
+    log(`✦ 突破里程碑 Lv.${S.breakthroughLevel}：${ms.name}！`, 'win');
+  }
+  log(`✦ 突破成功！突破等級 Lv.${S.breakthroughLevel}`, 'win');
+  renderTalent();
+  updateTownUI();
+  checkAchievements();
+}
+
+// ── 突破 Max：一次升多級 ──
 function doBreakthroughMax() {
   if (!allTalentsMaxed()) { log('需要先將所有天賦點滿！', 'lose'); return; }
   let bp = S.breakthroughPoints || 0;
   if (bp <= 0) { log('沒有突破點！', 'lose'); return; }
 
-  let leveled = 0;
-  let spentBp = 0;
-  let spentGold = 0;
+  let leveled = 0, spentBp = 0, spentGold = 0;
   const milestonesUnlocked = [];
 
   while (bp > 0) {
     const cost = breakthroughCost();
     if (S.money < cost) break;
-
     S.money -= cost;
     bp--;
     S.breakthroughLevel++;
     leveled++;
     spentBp++;
     spentGold += cost;
-
     const ms = BREAKTHROUGH_MILESTONES[S.breakthroughLevel];
     if (ms && !S.breakthroughMilestones[ms.key]) {
       S.breakthroughMilestones[ms.key] = true;
       milestonesUnlocked.push(`Lv.${S.breakthroughLevel} ${ms.name}（${ms.desc}）`);
     }
-
     if (leveled > 10000) break;
   }
 
   S.breakthroughPoints = bp;
-
   if (leveled === 0) {
     log(`⚠ 金幣不足！下一級需要 ${breakthroughCost().toLocaleString()} 金。`, 'lose');
     return;
   }
-
   log(`✦ 一次突破 ${leveled} 級！花費 ${spentBp} 突破點 + ${spentGold.toLocaleString()} 金幣`, 'win');
   log(`✦ 突破等級：Lv.${S.breakthroughLevel}`, 'win');
   milestonesUnlocked.forEach(m => log(`✦ 解鎖里程碑：${m}`, 'win'));
   if (bp > 0) log(`（剩餘突破點：${bp}，金幣不足無法繼續）`, 'system');
-
   renderTalent();
   updateTownUI();
   checkAchievements();
+}
+
+// ── 突破點兌換 ──
+function exchangeBreakthrough(type) {
+  const bp = S.breakthroughPoints || 0;
+  if (type === 'money') {
+    if (bp < 10) { log('突破點不足！需要 10 點。', 'lose'); return; }
+    S.breakthroughPoints -= 10;
+    S.money += 50000;
+    log('💰 兌換成功：10 突破點 → 50,000 金幣', 'win');
+  } else if (type === 'potion') {
+    if (bp < 5) { log('突破點不足！需要 5 點。', 'lose'); return; }
+    S.breakthroughPoints -= 5;
+    S.potion += 3;
+    log('🧪 兌換成功：5 突破點 → 3 瓶藥水', 'win');
+  }
+  renderTalent();
+  updateTownUI();
 }
 
 // ── 職業技能查詢 ──
@@ -350,7 +379,7 @@ const ACHIEVEMENTS = {
   pet5:{name:'寵物大師',desc:'收集 5 種寵物',check:()=>Object.keys(S.pets).length>=5},
   petAll:{name:'寵物收藏家',desc:'收集全部 8 種寵物',check:()=>Object.keys(S.pets).length>=8},
   guild1:{name:'加入公會',desc:'加入任意公會',check:()=>!!S.guild.id},
-  dungeon1:{name:'副本新手',desc:'完成一次副本',check:()=>S.dungeon.cleared>=1},
+  dungeon1:{name:'副本新手',desc:'完成一次副本',check:()=>(S.dungeon.cleared||0)>=1},
   dungeon5:{name:'副本專家',desc:'完成 5 次副本',check:()=>(S.dungeon.cleared||0)>=5},
 };
 
@@ -382,7 +411,7 @@ function updateTownUI() {
   $('townLevel').textContent = S.level;
   $('townRoleLv').textContent = S.roleLevel || 1;
   $('townBkLv').textContent = S.breakthroughLevel || 0;
-  $('townHp').textContent = `${S.hp}/${effMaxHp()}`;
+  $('townHp').textContent = `${Math.max(0,S.hp)}/${effMaxHp()}`;
   $('townMoney').textContent = S.money;
   $('townAtk').textContent = effAtk();
   $('townDef').textContent = effDef();
@@ -398,22 +427,13 @@ function updateTownUI() {
   if (advSub) advSub.textContent = `章節 ${S.chapter}`;
 }
 
-// ============================================================
-//  ★ 狀態區折疊切換
-// ============================================================
+// ── 狀態區折疊切換 ──
 let townStatsOpen = false;
-
 function toggleTownStats() {
   const body = document.getElementById('townStats');
   const icon = document.getElementById('townStatsIcon');
   const hint = document.getElementById('townStatsHint');
-
-  // 防呆：找不到元素就 log 出來，方便除錯
-  if (!body || !icon || !hint) {
-    console.error('[toggleTownStats] 找不到元素：', { body, icon, hint });
-    return;
-  }
-
+  if (!body || !icon || !hint) return;
   townStatsOpen = !townStatsOpen;
   if (townStatsOpen) {
     body.classList.remove('collapsed');
@@ -423,22 +443,5 @@ function toggleTownStats() {
     body.classList.add('collapsed');
     icon.style.transform = 'rotate(0deg)';
     hint.textContent = '點擊展開';
-  }
-}
-
-// 動態更新 favicon（依 HP 變化）— 可選功能
-function updateFavicon(hpPct) {
-  try {
-    // 找現有的 favicon link，或動態建立一個
-    let link = document.querySelector("link[rel='icon']");
-    if (!link) {
-      link = document.createElement('link');
-      link.rel = 'icon';
-      document.head.appendChild(link);
-    }
-    const emoji = hpPct > 0.6 ? '⚔️' : hpPct > 0.3 ? '🛡️' : '💀';
-    link.href = `data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>${emoji}</text></svg>`;
-  } catch(e) {
-    // 靜默失敗，不影響遊戲
   }
 }
