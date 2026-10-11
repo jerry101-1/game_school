@@ -581,6 +581,9 @@ function renderBreakthroughSection() {
       <button class="talent" style="background:#c62828;" ${canBreak?'':'disabled'} onclick="doBreakthrough()">
         ✦ 突破提升（1 突破點 + ${cost} 金）
       </button>
+      <button class="talent" style="background:#8e24aa;" ${canBreak?'':'disabled'} onclick="doBreakthroughMax()">
+        ✦✦ 突破 Max（花光突破點）
+      </button>
     </div>
     <div style="margin-top:14px;padding-top:10px;border-top:1px solid #2a2a3a;">
       <div class="subtitle" style="margin-bottom:8px;">── 里程碑 ──</div>`;
