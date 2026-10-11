@@ -28,7 +28,7 @@ const S = {
   abyssFloor:0, abyssBest:0, inAbyss:false,
 
   // ★ 新：副本 / 公會 / 寵物
-  dungeon: { active:null, floor:0 },   // 當前副本進度
+  dungeon: { active:null, floor:0, cleared:0 },   // 當前副本進度
   guild: { id:null, contrib:0, questProgress:{} },  // 公會
   pets: {},        // 擁有的寵物 {petId: {level, exp}}
   activePet: null, // 出戰中的寵物 id
@@ -391,9 +391,19 @@ function toggleTownStats() {
   }
 }
 
-// 動態更新 favicon（依 HP 變化）
+// 動態更新 favicon（依 HP 變化）— 可選功能
 function updateFavicon(hpPct) {
-  const emoji = hpPct > 0.6 ? '⚔️' : hpPct > 0.3 ? '🛡️' : '💀';
-  const link = document.querySelector("link[rel='icon']");
-  link.href = `data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>${emoji}</text></svg>`;
+  try {
+    // 找現有的 favicon link，或動態建立一個
+    let link = document.querySelector("link[rel='icon']");
+    if (!link) {
+      link = document.createElement('link');
+      link.rel = 'icon';
+      document.head.appendChild(link);
+    }
+    const emoji = hpPct > 0.6 ? '⚔️' : hpPct > 0.3 ? '🛡️' : '💀';
+    link.href = `data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>${emoji}</text></svg>`;
+  } catch(e) {
+    // 靜默失敗，不影響遊戲
+  }
 }
