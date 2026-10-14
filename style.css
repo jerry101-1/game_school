@@ -454,6 +454,9 @@ button:active:not(:disabled) {
   gap: 10px;
   margin-top: 12px;
 }
+@media (max-width: 600px) {
+  .gamble-grid { grid-template-columns: 1fr; }
+}
 
 .gamble-card {
   display: flex;
@@ -469,15 +472,15 @@ button:active:not(:disabled) {
   color: #fff;
   font-family: inherit;
   margin: 0;
-  min-height: 120px;
+  min-height: 110px;
 }
 .gamble-card:hover {
   border-color: #ffd54f;
   transform: translateY(-3px);
   box-shadow: 0 6px 20px rgba(255,213,79,0.3);
 }
-.gamble-card .gc-icon { font-size: 36px; }
-.gamble-card .gc-name { font-size: 16px; font-weight: bold; color: #ffd54f; }
+.gamble-card .gc-icon { font-size: 32px; }
+.gamble-card .gc-name { font-size: 15px; font-weight: bold; color: #ffd54f; }
 .gamble-card .gc-desc { font-size: 11px; color: #aaa; }
 
 .gamble-num {
@@ -499,4 +502,23 @@ button:active:not(:disabled) {
   color: #fff;
   border-color: #ffd54f;
   transform: scale(1.1);
+}
+
+.roulette-num {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid #444;
+  border-radius: 50%;
+  font-size: 14px;
+  font-weight: bold;
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.15s;
+  margin: 0;
+}
+.roulette-num:hover {
+  transform: scale(1.15);
+  box-shadow: 0 0 10px rgba(255,213,79,0.5);
+  border-color: #ffd54f;
 }
