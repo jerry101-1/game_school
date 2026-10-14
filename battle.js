@@ -3,6 +3,8 @@
 // ============================================================
 
 function startBattle() {
+  forceResetBattleState()
+  
   S.inBattle = true; S.gameOver = false;
   S.skillCD = 0; S.fruitSkillCD = 0;
   S.isDefending = false; S.isShieldActive = false;
@@ -681,4 +683,17 @@ function returnToTown() {
   saveGame();
   showScreen('screen-town');
   log('你回到了村莊。','system');
+}
+
+// ── 強制重置戰鬥狀態（保險用）──
+function forceResetBattleState() {
+  S.buttonLocked = false;
+  S.autoMode = false;
+  S.combo = 0;
+  ['btnAttack','btnSkill','btnPower','btnDefend','btnPotion'].forEach(id => {
+    const el = $(id);
+    if (el) el.disabled = false;
+  });
+  const btnCombo = $('btnCombo');
+  if (btnCombo) btnCombo.classList.add('hidden');
 }
