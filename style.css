@@ -443,3 +443,60 @@ button:active:not(:disabled) {
   font-size: 11px;
   margin-left: 6px;
 }
+
+/* ══════════════════════════════════════════════════════
+   ★ 賭場樣式
+   ══════════════════════════════════════════════════════ */
+
+.gamble-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.gamble-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 20px 12px;
+  background: linear-gradient(135deg, #1a1a2e, #2a1a1a);
+  border: 2px solid #7b1fa2;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: #fff;
+  font-family: inherit;
+  margin: 0;
+  min-height: 120px;
+}
+.gamble-card:hover {
+  border-color: #ffd54f;
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(255,213,79,0.3);
+}
+.gamble-card .gc-icon { font-size: 36px; }
+.gamble-card .gc-name { font-size: 16px; font-weight: bold; color: #ffd54f; }
+.gamble-card .gc-desc { font-size: 11px; color: #aaa; }
+
+.gamble-num {
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  background: #1a1a25;
+  border: 2px solid #4a148c;
+  border-radius: 8px;
+  font-size: 18px;
+  font-weight: bold;
+  color: #4fc3f7;
+  cursor: pointer;
+  transition: all 0.15s;
+  margin: 0;
+}
+.gamble-num:hover {
+  background: #6a1b9a;
+  color: #fff;
+  border-color: #ffd54f;
+  transform: scale(1.1);
+}
