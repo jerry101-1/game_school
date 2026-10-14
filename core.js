@@ -264,6 +264,51 @@ function exchangeBreakthrough(type) {
   updateTownUI();
 }
 
+// ── 天賦點兌換 ──
+function exchangeTalent(type) {
+  if (S.talentPoints <= 0) { log('沒有天賦點！', 'lose'); return; }
+  if (!allTalentsMaxed()) { log('天賦還沒點滿，先去點天賦！', 'lose'); return; }
+  
+  S.talentPoints--;
+  if (type === 'money') {
+    S.money += 5000;
+    log('💰 兌換成功：1 天賦點 → 5,000 金幣', 'win');
+  } else if (type === 'bp') {
+    S.breakthroughPoints = (S.breakthroughPoints || 0) + 1;
+    log('✦ 兌換成功：1 天賦點 → 1 突破點', 'win');
+  } else if (type === 'potion') {
+    S.potion += 5;
+    log('🧪 兌換成功：1 天賦點 → 5 瓶藥水', 'win');
+  }
+  renderTalent();
+  updateTownUI();
+}
+
+// ── 天賦點一次全部兌換 ──
+function exchangeTalentAll(type) {
+  if (S.talentPoints <= 0) { log('沒有天賦點！', 'lose'); return; }
+  if (!allTalentsMaxed()) { log('天賦還沒點滿！', 'lose'); return; }
+
+  const count = S.talentPoints;
+  if (count === 0) return;
+  
+  if (!confirm(`確定要兌換 ${count} 點天賦點嗎？`)) return;
+
+  if (type === 'money') {
+    const gain = count * 5000;
+    S.money += gain;
+    S.talentPoints = 0;
+    log(`💰 兌換成功：${count} 天賦點 → ${gain.toLocaleString()} 金幣`, 'win');
+  } else if (type === 'bp') {
+    S.breakthroughPoints = (S.breakthroughPoints || 0) + count;
+    S.talentPoints = 0;
+    log(`✦ 兌換成功：${count} 天賦點 → ${count} 突破點`, 'win');
+  }
+  renderTalent();
+  updateTownUI();
+  checkAchievements();
+}
+
 // ── 職業技能查詢 ──
 function getRoleSkill() {
   const role = ROLES[S.roleType];
