@@ -42,6 +42,7 @@ function loadGame() {
       if (S.activePet === undefined) S.activePet = null;
       if (!S.dungeon) S.dungeon = { active:null, floor:0, cleared:0 };
       if (S.dungeon.cleared === undefined) S.dungeon.cleared = 0;
+      if (!S.gambleLog) S.gambleLog = [];
       // 清空戰鬥暫存
       S.monster = null; S.inBattle = false; S.gameOver = false;
       S.inAbyss = false; S.abyssFloor = 0; S.buttonLocked = false;
