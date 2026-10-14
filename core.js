@@ -445,3 +445,19 @@ function toggleTownStats() {
     hint.textContent = '點擊展開';
   }
 }
+
+// ── 動態更新 favicon（依 HP 變化）──
+function updateFavicon(hpPct) {
+  try {
+    let link = document.querySelector("link[rel='icon']");
+    if (!link) {
+      link = document.createElement('link');
+      link.rel = 'icon';
+      document.head.appendChild(link);
+    }
+    const emoji = hpPct > 0.6 ? '⚔️' : hpPct > 0.3 ? '🛡️' : '💀';
+    link.href = `data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>${emoji}</text></svg>`;
+  } catch(e) {
+    // 靜默失敗
+  }
+}
