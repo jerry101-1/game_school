@@ -4,6 +4,14 @@
 
 function startBattle() {
   forceResetBattleState()
+  // ★ 保險：強制解鎖所有按鈕
+  S.buttonLocked = false;
+  ['btnAttack','btnSkill','btnPower','btnDefend','btnPotion'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.disabled = false;
+  });
+  const btnAuto = document.getElementById('btnAuto');
+  if (btnAuto) btnAuto.disabled = false;
   
   S.inBattle = true; S.gameOver = false;
   S.skillCD = 0; S.fruitSkillCD = 0;
@@ -607,6 +615,8 @@ function applyLoot(l) {
 }
 
 function afterBattle() {
+  // ★ 保險：解鎖按鈕
+  S.buttonLocked = false;
   showScreen('screen-battle');
   if (S.inAbyss) { setTimeout(() => abyssNextFloor(), 600); return; }
   if (S.dungeon.active) { setTimeout(() => dungeonNextFloor(), 600); return; }
