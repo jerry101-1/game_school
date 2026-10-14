@@ -113,6 +113,11 @@
       <span class="mi-icon">⚒️</span>
       <div><div class="mi-name">武器合成</div><div class="mi-desc">3 把同階合成高一階（有風險）</div></div>
     </button>
+    <button class="town-btn" onclick="openGamble()" style="background:linear-gradient(135deg,#c62828,#ef5350);border-color:#ff7043;">
+      <span class="tb-icon">🎰</span>
+      <span class="tb-name">賭場</span>
+      <span class="tb-sub">賭金幣</span>
+    </button>
   </div>
   <div class="actions" style="margin-top:10px;">
     <button onclick="backToTown()">← 返回村莊</button>
@@ -240,6 +245,15 @@
   <div class="actions" style="margin-top:10px;"><button onclick="closeForge()">離開</button></div>
 </div>
 
+<!-- 賭場 -->
+<div id="screen-gamble" class="panel hidden">
+  <div class="panel-title">🎰 賭場</div>
+  <div id="gambleContent"></div>
+  <div class="actions" style="margin-top:10px;">
+    <button onclick="closeGamble()">離開賭場</button>
+  </div>
+</div>
+
 <!-- 副本 -->
 <div id="screen-dungeon" class="panel hidden">
   <div class="panel-title">🏰 副本</div>
@@ -342,6 +356,7 @@
 <script src="dungeon.js"></script>
 <script src="guild.js"></script>
 <script src="pet.js"></script>
+<script src="gamble.js"></script>
 <script src="lz-string.js"></script>
 <script src="save.js"></script>
 <script src="main.js"></script>
