@@ -698,7 +698,6 @@ function returnToTown() {
 // ── 強制重置戰鬥狀態（保險用）──
 function forceResetBattleState() {
   S.buttonLocked = false;
-  S.autoMode = false;
   S.combo = 0;
   ['btnAttack','btnSkill','btnPower','btnDefend','btnPotion'].forEach(id => {
     const el = $(id);
