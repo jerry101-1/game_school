@@ -47,6 +47,9 @@ const S = {
   poisonTurns:0, poisonDamage:0, burnTurns:0, burnDamage:0,
   autoMode:false, inBattle:false, gameOver:false, isBossFight:false,
   playerDodge:5, buttonLocked:false,
+
+  //賭場
+  gambleLog: [],
 };
 
 // ── DOM 工具 ──
@@ -75,7 +78,7 @@ function showScreen(name) {
    'screen-fruit','screen-equip','screen-talent','screen-abyss',
    'screen-adventure','screen-battle','screen-job','screen-forge',
    'screen-dungeon','screen-guild','screen-pet','screen-cloud',
-   'screen-train','screen-collect','screen-system']
+   'screen-train','screen-collect','screen-system','screen-gamble']   // ★ 加
     .forEach(s => hide(s));
   if (name) show(name);
 }
