@@ -520,6 +520,33 @@ function renderTalent() {
     }
     html += `</div>`;
   }
+  // ★ 天賦全滿時顯示兌換區
+  if (allTalentsMaxed() && S.talentPoints > 0) {
+    html += `<div class="talent-branch" style="border-color:#ffd54f;background:linear-gradient(135deg,#1a1a10,#2a2a10);">
+      <div class="talent-branch-title" style="color:#ffd54f;">✨ 天賦點兌換</div>
+      <div class="subtitle">天賦已全滿，剩下的天賦點可以兌換其他資源。</div>
+      <div class="stat-row" style="margin-top:8px;">
+        <span>可用天賦點：<span style="color:#ffd54f;font-weight:bold;">${S.talentPoints}</span></span>
+      </div>
+      <div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:8px;">
+        <button class="talent small" style="background:#f9a825;color:#111;" onclick="exchangeTalent('money')">
+          💰 1 天賦點 → 5,000 金
+        </button>
+        <button class="talent small" style="background:#8e24aa;" onclick="exchangeTalent('bp')">
+          ✦ 1 天賦點 → 1 突破點
+        </button>
+        <button class="talent small" style="background:#00897b;" onclick="exchangeTalent('potion')">
+          🧪 1 天賦點 → 5 藥水
+        </button>
+        <button class="talent small" style="background:#c62828;" onclick="exchangeTalentAll('bp')">
+          ✦✦ 全部換突破點
+        </button>
+        <button class="talent small" style="background:#1565c0;" onclick="exchangeTalentAll('money')">
+          💰 全部換金幣
+        </button>
+      </div>
+    </div>`;
+  }
   html += renderBreakthroughSection();
   $('talentContent').innerHTML = html;
 }
