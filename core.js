@@ -259,7 +259,21 @@ function exchangeBreakthrough(type) {
     S.breakthroughPoints -= 5;
     S.potion += 3;
     log('🧪 兌換成功：5 突破點 → 3 瓶藥水', 'win');
-  }
+  } else if (type === 'exp') {
+    S.exp += 10000;
+    log('⭐ 兌換成功：1 天賦點 → 10,000 經驗', 'win');
+  } else if (type === 'fruit') {
+    // 隨機獲得一顆果實
+    const id = pickFruit();
+    if (!S.fruits[id]) S.fruits[id] = {level:1, exp:0};
+    else S.fruits[id].exp += 100;
+    log(`🍇 兌換成功：1 天賦點 → 隨機果實（${FRUITS[id].name}）`, 'win');
+  } else if (type === 'pet') {
+    // 隨機獲得一隻寵物
+    grantRandomPet();
+    log('🐾 兌換成功：1 天賦點 → 隨機寵物', 'win');
+}
+  
   renderTalent();
   updateTownUI();
 }
