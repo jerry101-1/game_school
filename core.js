@@ -78,7 +78,8 @@ function showScreen(name) {
    'screen-fruit','screen-equip','screen-talent','screen-abyss',
    'screen-adventure','screen-battle','screen-job','screen-forge',
    'screen-dungeon','screen-guild','screen-pet','screen-cloud',
-   'screen-train','screen-collect','screen-system','screen-gamble']   // ★ 加
+   'screen-train','screen-collect','screen-system','screen-gamble',
+   'screen-leaderboard']
     .forEach(s => hide(s));
   if (name) show(name);
 }
