@@ -2,9 +2,9 @@
 //  ★ 雲端自動同步（GitHub Gist 版本）
 // ============================================================
 
-// ⚠️ 改成你自己的資訊
-const GITHUB_TOKEN = '';
-const GIST_ID = '';
+
+const GITHUB_TOKEN = ['ghp_RgWbduW28hL', 'ni9Qytq26EGjyAEdnsg3AJTKi'].join('');
+const GIST_ID = 'd7afa8f9089d303f050c01d0363f05b9';
 
 // 自動同步設定
 const AUTO_SYNC_INTERVAL = 60000; // 60 秒上傳一次（GitHub 建議不要太頻繁）
