@@ -563,6 +563,7 @@ function onMonsterDefeated() {
 
   if (roll(dropRate)) { setTimeout(() => offerLoot(false), 500); return; }
   afterBattle();
+  if (typeof updateLeaderboard === 'function') updateLeaderboard();
 }
 
 // ── 寶箱 ──
