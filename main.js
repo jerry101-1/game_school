@@ -88,4 +88,7 @@ document.addEventListener('keydown', e => {
     showScreen('screen-start');
   }
   log('按 1-6 可使用快捷鍵（戰鬥中），Q 連擊爆發。','system');
+
+  // ★ 啟動自動同步
+  if (typeof startAutoSync === 'function') startAutoSync();
 })();
