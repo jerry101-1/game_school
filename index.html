@@ -71,6 +71,11 @@
         <span class="tb-name">公會</span>
         <span class="tb-sub">任務加成</span>
       </button>
+        <button class="town-btn" onclick="openLeaderboard()" style="background:linear-gradient(135deg,#f9a825,#fdd835);color:#111;border-color:#ffeb3b;">
+        <span class="tb-icon">🏆</span>
+        <span class="tb-name">排行榜</span>
+        <span class="tb-sub">最佳紀錄</span>
+      </button>
     </div>
   </div>
 
@@ -93,6 +98,15 @@
   </div>
 </div>
 
+<!-- 排行榜 -->
+<div id="screen-leaderboard" class="panel hidden">
+  <div class="panel-title">🏆 排行榜</div>
+  <div id="leaderboardContent"></div>
+  <div class="actions" style="margin-top:10px;">
+    <button onclick="closeLeaderboard()">離開</button>
+  </div>
+</div>
+  
 <!-- 養成子選單 -->
 <div id="screen-train" class="panel hidden">
   <div class="panel-title">🛠️ 養成</div>
@@ -361,6 +375,7 @@
 <script src="lz-string.js"></script>
 <script src="save.js"></script>
 <script src="main.js"></script>
+<script src="leaderboard.js"></script>
 <script src="cloud.js"></script>
 </body>
 </html>
