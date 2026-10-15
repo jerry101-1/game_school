@@ -410,8 +410,8 @@ function openRoulette() {
       <div class="actions" style="margin-top:10px;">
         <button class="small" onclick="setRouletteType('red')" style="background:#c62828;">🔴 紅（2倍）</button>
         <button class="small" onclick="setRouletteType('black')" style="background:#212121;">⚫ 黑（2倍）</button>
-        <button class="small" onclick="setRouletteType('even')" style="background:#1565c0;">單（2倍）</button>
-        <button class="small" onclick="setRouletteType('odd')" style="background:#1565c0;">雙（2倍）</button>
+        <button class="small" onclick="setRouletteType('even')" style="background:#1565c0;">雙（2倍）</button>
+        <button class="small" onclick="setRouletteType('odd')" style="background:#1565c0;">單（2倍）</button>
       </div>
 
       <div class="subtitle" style="margin-top:15px;">或直接押數字（36 倍）：</div>
