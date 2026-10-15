@@ -522,3 +522,20 @@ button:active:not(:disabled) {
   box-shadow: 0 0 10px rgba(255,213,79,0.5);
   border-color: #ffd54f;
 }
+
+/*排行榜*/
+.lb-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: #1a1a25;
+  border: 1px solid #2a2a3a;
+  border-radius: 8px;
+  margin: 6px 0;
+}
+.lb-icon { font-size: 26px; min-width: 32px; text-align: center; }
+.lb-info { flex: 1; }
+.lb-name { color: #4fc3f7; font-size: 13px; font-weight: bold; }
+.lb-value { color: #ffd54f; font-size: 16px; font-weight: bold; margin-top: 2px; }
+.lb-date { color: #888; font-size: 11px; }
