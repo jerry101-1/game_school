@@ -50,6 +50,10 @@ const S = {
 
   //賭場
   gambleLog: [],
+
+  //排行
+  fastestBossTime: 99999,
+  bossStartTime: null,
 };
 
 // ── DOM 工具 ──
