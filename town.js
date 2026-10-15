@@ -823,7 +823,7 @@ function spawnBoss(ch) {
   S.monster.maxHp = S.monster.hp;
 }
 
-// ── 轉職 ──
+// ── 轉職神殿 ──
 let pendingJobChoices = [];
 function openJobChange() { showScreen('screen-job'); renderJobChange(); }
 function closeJobChange() { updateTownUI(); showScreen('screen-town'); }
