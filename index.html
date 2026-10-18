@@ -395,11 +395,6 @@
   <div id="log"></div>
 </div>
 
-  <!-- 引入 Three.js -->
-<script type="importmap">
-  { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }
-</script>
-
 <script src="data.js"></script>
 <script src="core.js"></script>
 <script src="battle.js"></script>
@@ -415,5 +410,8 @@
 <script src="cloud.js"></script>
 <script src="rebirth.js"></script>
 <script src="patchnotes.js"></script>
+  <!-- ★ 3D 專用腳本 (注意這裡的載入方式) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script type="module" src="3dworld.js"></script>
 </body>
 </html>
