@@ -493,9 +493,12 @@ function onMonsterDefeated() {
   const g   = getGuildBonus();
   const p   = getPetBonus();
 
-  const expBonus  = Math.floor(m.exp   * ((S.playexp - 100) + S.expBonus + tal.exp  + bk.exp  + g.exp  + p.exp)  / 100);
-  const totalExp  = m.exp + expBonus;
-  const goldBonus = Math.floor(m.money * (S.goldBonus + tal.gold + bk.gold + g.gold + p.gold) / 100);
+  const rebirthExp = 1 + (S.rebirthBonusExp || 0) / 100;
+  const rebirthGold = 1 + (S.rebirthBonusGold || 0) / 100;
+
+  const expBonus  = Math.floor(m.exp   * ((S.playexp - 100) + S.expBonus + tal.exp  + bk.exp  + g.exp  + p.exp)  / 100 * rebirthExp);
+  const goldBonus = Math.floor(m.money * (S.goldBonus + tal.gold + bk.gold + g.gold + p.gold) / 100 * rebirthGold);
+  const totalExp  = m.exp + expBonus;  
   const totalGold = m.money + goldBonus;
 
   S.exp += totalExp;
