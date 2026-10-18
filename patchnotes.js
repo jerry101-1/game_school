@@ -24,6 +24,7 @@ function renderPatchNotes() {
       color: '#c5b8se',
       change: [
         '轉生系統改善(加入X1,X10,X100,max)',
+        '排行榜改善',
       ]
     },
     {
