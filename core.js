@@ -298,13 +298,31 @@ function doRebirth() {
   showScreen('screen-town');
 }
 
-function upgradeRebirth(type) {
+function upgradeRebirth(type, amount = 1) {
   if (S.rebirthPoints < 1) { log('沒有轉生點數！', 'lose'); return; }
-  if (type === 'atk') { S.rebirthPoints--; S.rebirthBonusAtk += 10; log('🌟 兌換成功：永久攻擊力 +10%', 'win'); }
-  else if (type === 'hp') { S.rebirthPoints--; S.rebirthBonusHp += 10; log('🌟 兌換成功：永久最大 HP +10%', 'win'); }
-  else if (type === 'exp') { S.rebirthPoints--; S.rebirthBonusExp += 20; log('🌟 兌換成功：永久經驗 +20%', 'win'); }
-  else if (type === 'gold') { S.rebirthPoints--; S.rebirthBonusGold += 20; log('🌟 兌換成功：永久金幣 +20%', 'win'); }
-  renderRebirth(); updateTownUI();
+  
+  // 如果傳入 'max'，就把剩下的點數全砸下去
+  let count = amount === 'max' ? S.rebirthPoints : Math.min(amount, S.rebirthPoints);
+  if (count <= 0) return;
+
+  S.rebirthPoints -= count;
+  
+  if (type === 'atk') {
+    S.rebirthBonusAtk += 10 * count;
+    log(`🌟 兌換成功：永久攻擊力 +${10 * count}%（消耗 ${count} 點）`, 'win');
+  } else if (type === 'hp') {
+    S.rebirthBonusHp += 10 * count;
+    log(`🌟 兌換成功：永久最大 HP +${10 * count}%（消耗 ${count} 點）`, 'win');
+  } else if (type === 'exp') {
+    S.rebirthBonusExp += 20 * count;
+    log(`🌟 兌換成功：永久經驗 +${20 * count}%（消耗 ${count} 點）`, 'win');
+  } else if (type === 'gold') {
+    S.rebirthBonusGold += 20 * count;
+    log(`🌟 兌換成功：永久金幣 +${20 * count}%（消耗 ${count} 點）`, 'win');
+  }
+  
+  renderRebirth();
+  updateTownUI();
 }
 
 // ── 職業技能查詢 ──
