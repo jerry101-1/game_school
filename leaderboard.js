@@ -6,16 +6,16 @@ const LB_KEY = 'rpg_leaderboard_v1';
 
 // ── 排行榜項目定義 ──
 const LB_CATEGORIES = {
-  highestLevel:    { name: '最高等級',     icon: '⭐', key: 'level',           format: v => `Lv.${v}` },
-  highestAtk:      { name: '最高攻擊力',   icon: '⚔️', key: 'atk',             format: v => v.toLocaleString() },
-  highestHp:       { name: '最高 HP',      icon: '🩷', key: 'maxHp',           format: v => v.toLocaleString() },
-  highestMoney:    { name: '最多金幣',     icon: '💰', key: 'money',           format: v => v.toLocaleString() },
-  highestAbyss:    { name: '深淵最高層',   icon: '🌀', key: 'abyssBest',       format: v => `第 ${v} 層` },
-  mostKills:       { name: '最多擊殺',     icon: '💀', key: 'killCount',       format: v => v.toLocaleString() },
-  highestCombo:    { name: '最高連擊',     icon: '🔥', key: 'maxCombo',        format: v => `${v} 連擊` },
-  fastestBoss:     { name: '最快擊敗 BOSS', icon: '👑', key: 'fastestBossTime', format: v => `${v} 秒` },
-  mostFruits:      { name: '最多果實種類', icon: '🍇', key: 'fruitCount',      format: v => `${v} 種` },
-  mostPets:        { name: '最多寵物種類', icon: '🐾', key: 'petCount',        format: v => `${v} 種` },
+  highestLevel:    { name: '最高等級',     icon: '⭐', key: 'level',           format: v => `Lv.${formatNumber(v)}` },
+  highestAtk:      { name: '最高攻擊力',   icon: '⚔️', key: 'atk',             format: v => formatNumber(v) },
+  highestHp:       { name: '最高 HP',      icon: '🩷', key: 'maxHp',           format: v => formatNumber(v) },
+  highestMoney:    { name: '最多金幣',     icon: '💰', key: 'money',           format: v => formatNumber(v) },
+  highestAbyss:    { name: '深淵最高層',   icon: '🌀', key: 'abyssBest',       format: v => `第 ${formatNumber(v)} 層` },
+  mostKills:       { name: '最多擊殺',     icon: '💀', key: 'killCount',       format: v => formatNumber(v) },
+  highestCombo:    { name: '最高連擊',     icon: '🔥', key: 'maxCombo',        format: v => `${formatNumber(v)} 連擊` },
+  fastestBoss:     { name: '最快擊敗 BOSS', icon: '👑', key: 'fastestBossTime', format: v => `${formatNumber(v)} 秒` },
+  mostFruits:      { name: '最多果實種類', icon: '🍇', key: 'fruitCount',      format: v => `${formatNumber(v)} 種` },
+  mostPets:        { name: '最多寵物種類', icon: '🐾', key: 'petCount',        format: v => `${formatNumber(v)} 種` },
 };
 
 // ── 載入排行榜 ──
