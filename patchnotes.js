@@ -16,12 +16,13 @@ function renderPatchNotes() {
   const c = document.getElementById('patchContent');
   if (!c) return;
 
+  // ★ 在這裡維護你的更新紀錄
   const notes = [
     {
       version: 'v1.5.1',
       date: '2026-10-15',
       color: '#ba68c8',
-      changes: [
+      changes: [ // 注意這裡是 changes
         '🌟 轉生系統改善：加入 X1, X10, X100, Max 按鈕，不用再點到手痠。',
         '📈 排行榜數值優化：支援 K, M, B, T 等單位縮寫，解決數字爆版問題。'
       ]
@@ -48,6 +49,28 @@ function renderPatchNotes() {
         '☁️ 雲端存檔導入 LZ-String 壓縮，分享碼縮小 70%。',
         '🐾 優化寵物出戰 AI，現在會更頻繁地觸發被動效果。'
       ]
+    },
+    {
+      version: 'v1.3.0',
+      date: '2026-09-28',
+      color: '#00897b',
+      changes: [
+        '🏰 新增「副本模式」與 5 個不同難度的副本。',
+        '🏛️ 新增「公會系統」與每日任務。',
+        '🐉 新增 8 種寵物與專屬技能。',
+        '✨ 新增「突破系統」與里程碑。'
+      ]
+    },
+    {
+      version: 'v1.0.0',
+      date: '2026-09-01',
+      color: '#4fc3f7',
+      changes: [
+        '⚔️ 遊戲首次發布！',
+        '🍇 實裝 10 種惡魔果實與 4 階技能解鎖。',
+        '🎭 實裝 12 種職業與轉職系統。',
+        '🎽 實裝隨機屬性裝備與武器合成系統。'
+      ]
     }
   ];
 
@@ -56,14 +79,21 @@ function renderPatchNotes() {
   </div>`;
 
   notes.forEach(note => {
-    html += `<div class="panel" style="border-left: 4px solid ${note.color}; background: #151520;">`;
-    html += `<div class="panel-title" style="color:${note.color}; margin-bottom:8px;">`;
+    html += `<div class="panel" style="border-left: 4px solid ${note.color || '#4fc3f7'}; background: #151520;">`;
+    html += `<div class="panel-title" style="color:${note.color || '#4fc3f7'}; margin-bottom:8px;">`;
     html += `${note.version} <span class="subtitle" style="font-weight:normal;">(${note.date})</span>`;
     html += `</div>`;
     html += `<ul style="padding-left: 20px; font-size: 13px; line-height: 1.6; color: #ccc;">`;
-    note.changes.forEach(change => {
-      html += `<li style="margin-bottom: 6px;">${change}</li>`;
-    });
+    
+    // ★ 這裡加了防呆：就算你打成 change，或是漏寫，也不會崩潰
+    if (note.changes && Array.isArray(note.changes)) {
+      note.changes.forEach(change => {
+        html += `<li style="margin-bottom: 6px;">${change}</li>`;
+      });
+    } else {
+      html += `<li style="color:#f44336;">（此版本無更新紀錄或格式錯誤）</li>`;
+    }
+    
     html += `</ul></div>`;
   });
 
