@@ -70,12 +70,13 @@ function renderBattleUI() {
   const bar = $('playerHpBar');
   bar.style.width = hpPct + '%';
   bar.className = 'hp-fill ' + (hpPct > 60 ? 'green' : hpPct > 30 ? 'yellow' : 'red');
-  $('playerHpText').textContent = `${Math.max(0,S.hp)} / ${maxHp}`;
+  // ★ 套用格式化
+  $('playerHpText').textContent = `${formatNumber(Math.max(0,S.hp))} / ${formatNumber(maxHp)}`;
   $('battleRole').textContent = S.roleName;
-  $('battleLevel').textContent = S.level;
-  $('battleAtk').textContent = effAtk();
-  $('battleDef').textContent = effDef();
-  $('battlePotion').textContent = S.potion;
+  $('battleLevel').textContent = formatNumber(S.level);
+  $('battleAtk').textContent = formatNumber(effAtk());
+  $('battleDef').textContent = formatNumber(effDef());
+  $('battlePotion').textContent = formatNumber(S.potion);
 
   const m = S.monster;
   if (m) {
@@ -83,9 +84,9 @@ function renderBattleUI() {
     const mBar = $('monsterHpBar');
     mBar.style.width = mPct + '%';
     mBar.className = 'hp-fill ' + (mPct > 60 ? 'green' : mPct > 30 ? 'yellow' : 'red');
-    $('monsterHpText').textContent = `${Math.max(0,m.hp)} / ${m.maxHp}`;
+    $('monsterHpText').textContent = `${formatNumber(Math.max(0,m.hp))} / ${formatNumber(m.maxHp)}`;
     $('monsterName').textContent = m.name;
-    $('monsterLv').textContent = Math.max(1, m.lv);
+    $('monsterLv').textContent = formatNumber(Math.max(1, m.lv));
     $('monsterWeak').textContent = elemName(m.weak);
     $('monsterRes').textContent = elemName(m.res);
     $('monsterSkill').textContent = m.skill;
