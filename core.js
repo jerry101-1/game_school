@@ -483,19 +483,19 @@ function popupAchievement(name, desc) {
 // ── 村莊 UI 更新 ──
 function updateTownUI() {
   $('townRole').textContent = S.roleName;
-  $('townLevel').textContent = S.level;
-  $('townRoleLv').textContent = S.roleLevel || 1;
-  $('townBkLv').textContent = S.breakthroughLevel || 0;
-  $('townHp').textContent = `${Math.max(0,S.hp)}/${effMaxHp()}`;
-  $('townMoney').textContent = S.money;
-  $('townAtk').textContent = effAtk();
-  $('townDef').textContent = effDef();
-  $('townPotion').textContent = S.potion;
-  $('townChapter').textContent = S.chapter;
-  $('townExp').textContent = `${S.exp}/${S.expNeeded}`;
-  $('townKill').textContent = S.killCount;
-  $('townTalent').textContent = S.talentPoints;
-  $('townAbyss').textContent = S.abyssBest;
+  $('townLevel').textContent = formatNumber(S.level);  // ★
+  $('townRoleLv').textContent = formatNumber(S.roleLevel || 1);
+  $('townBkLv').textContent = formatNumber(S.breakthroughLevel || 0);
+  $('townHp').textContent = `${formatNumber(S.hp)}/${formatNumber(effMaxHp())}`; // ★
+  $('townMoney').textContent = formatNumber(S.money); // ★
+  $('townAtk').textContent = formatNumber(effAtk()); // ★
+  $('townDef').textContent = formatNumber(effDef()); // ★
+  $('townPotion').textContent = formatNumber(S.potion);
+  $('townChapter').textContent = formatNumber(S.chapter);
+  $('townExp').textContent = `${formatNumber(S.exp)}/${formatNumber(S.expNeeded)}`; // ★
+  $('townKill').textContent = formatNumber(S.killCount);
+  $('townTalent').textContent = formatNumber(S.talentPoints);
+  $('townAbyss').textContent = formatNumber(S.abyssBest);
   $('townGuild').textContent = S.guild.id ? GUILDS[S.guild.id].name : '無';
   $('townPet').textContent = S.activePet ? PETS[S.activePet].name : '無';
   const advSub = document.getElementById('townAdventureSub');
