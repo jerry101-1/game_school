@@ -165,7 +165,7 @@
 <!-- 系統選單 -->
 <div id="screen-system" class="panel hidden">
   <div class="panel-title">⚙️ 系統</div>
-  <div class="subtitle" style="text-align:center;margin-bottom:12px;">存檔、雲端、離開</div>
+  <div class="subtitle" style="text-align:center;margin-bottom:12px;">存檔、雲端、轉生</div>
   <div class="menu-list">
     <button class="menu-item" onclick="saveGame()">
       <span class="mi-icon">💾</span>
@@ -175,18 +175,23 @@
       <span class="mi-icon">☁</span>
       <div><div class="mi-name">雲端存檔</div><div class="mi-desc">產生分享碼，跨電腦遊玩</div></div>
     </button>
-  </div>
-  <!-- 轉生 -->
-  <div id="screen-rebirth" class="panel hidden">
-    <div class="panel-title">🌟轉生</div>
-    <div id="rebirthContent"></div>
+    <!-- ★ 加在這裡：轉生按鈕 -->
     <button class="menu-item" onclick="openRebirth()">
       <span class="mi-icon">🌟</span>
-      <div><div class="mi-name">轉生</div><div class="mi-desc">重置進度換取永久加成</div></div>
+      <div><div class="mi-name">無限轉生</div><div class="mi-desc">重置進度換取永久加成</div></div>
     </button>
-    <div class="actions" style="margin-top:10px;">
-      <button onclick="closeRebirth()">返回村莊</button>
-    </div>
+  </div>
+  <div class="actions" style="margin-top:10px;">
+    <button onclick="backToTown()">← 返回村莊</button>
+  </div>
+</div>
+
+<!-- ★ 轉生獨立畫面 (移到外面來) -->
+<div id="screen-rebirth" class="panel hidden">
+  <div class="panel-title">🌟 無限轉生</div>
+  <div id="rebirthContent"></div>
+  <div class="actions" style="margin-top:10px;">
+    <button onclick="closeRebirth()">返回村莊</button>
   </div>
 </div>
 
