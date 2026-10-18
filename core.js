@@ -66,8 +66,8 @@ const S = {
 
 // ── DOM 工具 ──
 const $ = id => document.getElementById(id);
-const show = id => $(id).classList.remove('hidden');
-const hide = id => $(id).classList.add('hidden');
+const show = id => { const el = $(id); if (el) el.classList.remove('hidden'); };
+const hide = id => { const el = $(id); if (el) el.classList.add('hidden'); };
 const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 const roll = pct => Math.random() * 100 < pct;
 
