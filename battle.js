@@ -696,8 +696,19 @@ function returnToTown() {
   S.dungeon.floor = 0;
   updateTownUI();
   saveGame();
+   // ★ 檢查是否要回到 3D
+  if (S.returnTo3D) {
+    S.returnTo3D = false;
+    S.inBattle = false;
+    showScreen('screen-town'); // 先切回村莊隱藏戰鬥
+    start3DExplore(); // 重新進入 3D (或者寫一個恢復 3D 畫面的函式)
+    return;
+  }
+
+  // 否則正常回村莊
   showScreen('screen-town');
   log('你回到了村莊。','system');
+  
 }
 
 // ── 強制重置戰鬥狀態（保險用）──
