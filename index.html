@@ -116,35 +116,36 @@
   </div>
 </div>
 
-<!-- 養成選單 -->
-<div id="screen-train" class="panel hidden">
-  <div class="panel-title">🛠️ 養成</div>
-  <div class="subtitle" style="text-align:center;margin-bottom:12px;">強化自己，成為更強的勇者</div>
+<!-- 系統選單 -->
+<div id="screen-system" class="panel hidden">
+  <div class="panel-title">⚙️ 系統</div>
+  <div class="subtitle" style="text-align:center;margin-bottom:12px;">存檔、雲端、轉生</div>
   <div class="menu-list">
-    <button class="menu-item" onclick="openShop()">
-      <span class="mi-icon">🛒</span>
-      <div><div class="mi-name">商店</div><div class="mi-desc">購買裝備、藥水、強化數值</div></div>
+    <button class="menu-item" onclick="saveGame()">
+      <span class="mi-icon">💾</span>
+      <div><div class="mi-name">本地存檔</div><div class="mi-desc">儲存到這台電腦的瀏覽器</div></div>
     </button>
-    <button class="menu-item" onclick="openTalent()">
+    <button class="menu-item" onclick="openCloud()">
+      <span class="mi-icon">☁</span>
+      <div><div class="mi-name">雲端存檔</div><div class="mi-desc">產生分享碼，跨電腦遊玩</div></div>
+    </button>
+    <!-- 轉生按鈕 -->
+    <button class="menu-item" onclick="openRebirth()">
       <span class="mi-icon">🌟</span>
-      <div><div class="mi-name">天賦樹</div><div class="mi-desc">分配天賦點、突破系統</div></div>
-    </button>
-    <button class="menu-item" onclick="openJobChange()">
-      <span class="mi-icon">🔄</span>
-      <div><div class="mi-name">轉職神殿</div><div class="mi-desc">隨機抽 3 職業，可繼承等級</div></div>
-    </button>
-    <button class="menu-item" onclick="openForge()">
-      <span class="mi-icon">⚒️</span>
-      <div><div class="mi-name">武器合成</div><div class="mi-desc">3 把同階合成高一階（有風險）</div></div>
-    </button>
-    <button class="town-btn" onclick="openGamble()" style="background:linear-gradient(135deg,#c62828,#ef5350);border-color:#ff7043;">
-      <span class="tb-icon">🎰</span>
-      <span class="tb-name">賭場</span>
-      <span class="tb-sub">賭金幣</span>
+      <div><div class="mi-name">無限轉生</div><div class="mi-desc">重置進度換取永久加成</div></div>
     </button>
   </div>
   <div class="actions" style="margin-top:10px;">
     <button onclick="backToTown()">← 返回村莊</button>
+  </div>
+</div>
+
+<!-- 無限轉生畫面（獨立在外，不屬於系統選單） -->
+<div id="screen-rebirth" class="panel hidden">
+  <div class="panel-title">🌟 無限轉生</div>
+  <div id="rebirthContent"></div>
+  <div class="actions" style="margin-top:10px;">
+    <button onclick="closeRebirth()">返回村莊</button>
   </div>
 </div>
 
