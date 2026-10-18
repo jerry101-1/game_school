@@ -29,7 +29,6 @@
 <div id="screen-town" class="panel hidden">
   <div class="panel-title">🏘️ 村莊</div>
 
-    <!-- ── 狀態區（可折疊） ── -->
   <div class="stat-header" onclick="toggleTownStats()">
     <span class="stat-header-icon" id="townStatsIcon">▼</span>
     <span class="stat-header-title">📊 勇者狀態</span>
@@ -47,7 +46,6 @@
     <div class="stat-row"><span id="syncIndicator"><span style="color:#888;">☁ 未同步</span></span></div>
   </div>
 
-  <!-- ── 第一層：主要行動（大按鈕） ── -->
   <div class="town-section">
     <div class="town-section-label">⚔️ 冒險</div>
     <div class="town-grid-lg">
@@ -71,7 +69,7 @@
         <span class="tb-name">公會</span>
         <span class="tb-sub">任務加成</span>
       </button>
-        <button class="town-btn" onclick="openLeaderboard()" style="background:linear-gradient(135deg,#f9a825,#fdd835);color:#111;border-color:#ffeb3b;">
+      <button class="town-btn" onclick="openLeaderboard()" style="background:linear-gradient(135deg,#f9a825,#fdd835);color:#111;border-color:#ffeb3b;">
         <span class="tb-icon">🏆</span>
         <span class="tb-name">排行榜</span>
         <span class="tb-sub">最佳紀錄</span>
@@ -79,7 +77,6 @@
     </div>
   </div>
 
-  <!-- ── 第二層：三大分類（開啟子選單） ── -->
   <div class="town-section">
     <div class="town-grid-sm">
       <button class="town-cat cat-train" onclick="openTrainMenu()">
@@ -98,54 +95,34 @@
   </div>
 </div>
 
-<!-- 排行榜 -->
-<div id="screen-leaderboard" class="panel hidden">
-  <div class="panel-title">🏆 排行榜</div>
-  <div id="leaderboardContent"></div>
-  <div class="actions" style="margin-top:10px;">
-    <button onclick="closeLeaderboard()">離開</button>
-  </div>
-</div>
-
-<!-- ★ 轉生獨立畫面 (移到外面來) -->
-<div id="screen-rebirth" class="panel hidden">
-  <div class="panel-title">🌟 無限轉生</div>
-  <div id="rebirthContent"></div>
-  <div class="actions" style="margin-top:10px;">
-    <button onclick="closeRebirth()">返回村莊</button>
-  </div>
-</div>
-
-<!-- 系統選單 -->
-<div id="screen-system" class="panel hidden">
-  <div class="panel-title">⚙️ 系統</div>
-  <div class="subtitle" style="text-align:center;margin-bottom:12px;">存檔、雲端、轉生</div>
+<!-- 養成選單 -->
+<div id="screen-train" class="panel hidden">
+  <div class="panel-title">🛠️ 養成</div>
+  <div class="subtitle" style="text-align:center;margin-bottom:12px;">強化自己，成為更強的勇者</div>
   <div class="menu-list">
-    <button class="menu-item" onclick="saveGame()">
-      <span class="mi-icon">💾</span>
-      <div><div class="mi-name">本地存檔</div><div class="mi-desc">儲存到這台電腦的瀏覽器</div></div>
+    <button class="menu-item" onclick="openShop()">
+      <span class="mi-icon">🛒</span>
+      <div><div class="mi-name">商店</div><div class="mi-desc">購買裝備、藥水、強化數值</div></div>
     </button>
-    <button class="menu-item" onclick="openCloud()">
-      <span class="mi-icon">☁</span>
-      <div><div class="mi-name">雲端存檔</div><div class="mi-desc">產生分享碼，跨電腦遊玩</div></div>
-    </button>
-    <!-- 轉生按鈕 -->
-    <button class="menu-item" onclick="openRebirth()">
+    <button class="menu-item" onclick="openTalent()">
       <span class="mi-icon">🌟</span>
-      <div><div class="mi-name">無限轉生</div><div class="mi-desc">重置進度換取永久加成</div></div>
+      <div><div class="mi-name">天賦樹</div><div class="mi-desc">分配天賦點、突破系統</div></div>
+    </button>
+    <button class="menu-item" onclick="openJobChange()">
+      <span class="mi-icon">🔄</span>
+      <div><div class="mi-name">轉職神殿</div><div class="mi-desc">隨機抽 3 職業，可繼承等級</div></div>
+    </button>
+    <button class="menu-item" onclick="openForge()">
+      <span class="mi-icon">⚒️</span>
+      <div><div class="mi-name">武器合成</div><div class="mi-desc">3 把同階合成高一階（有風險）</div></div>
+    </button>
+    <button class="menu-item" onclick="openGamble()">
+      <span class="mi-icon">🎰</span>
+      <div><div class="mi-name">賭場</div><div class="mi-desc">賭金幣</div></div>
     </button>
   </div>
   <div class="actions" style="margin-top:10px;">
     <button onclick="backToTown()">← 返回村莊</button>
-  </div>
-</div>
-
-<!-- 無限轉生畫面（獨立在外，不屬於系統選單） -->
-<div id="screen-rebirth" class="panel hidden">
-  <div class="panel-title">🌟 無限轉生</div>
-  <div id="rebirthContent"></div>
-  <div class="actions" style="margin-top:10px;">
-    <button onclick="closeRebirth()">返回村莊</button>
   </div>
 </div>
 
@@ -185,7 +162,6 @@
       <span class="mi-icon">☁</span>
       <div><div class="mi-name">雲端存檔</div><div class="mi-desc">產生分享碼，跨電腦遊玩</div></div>
     </button>
-    <!-- ★ 加在這裡：轉生按鈕 -->
     <button class="menu-item" onclick="openRebirth()">
       <span class="mi-icon">🌟</span>
       <div><div class="mi-name">無限轉生</div><div class="mi-desc">重置進度換取永久加成</div></div>
@@ -196,11 +172,27 @@
   </div>
 </div>
 
+<!-- 排行榜 -->
+<div id="screen-leaderboard" class="panel hidden">
+  <div class="panel-title">🏆 排行榜</div>
+  <div id="leaderboardContent"></div>
+  <div class="actions" style="margin-top:10px;">
+    <button onclick="closeLeaderboard()">離開</button>
+  </div>
+</div>
+
+<!-- 轉生獨立畫面 -->
+<div id="screen-rebirth" class="panel hidden">
+  <div class="panel-title">🌟 無限轉生</div>
+  <div id="rebirthContent"></div>
+  <div class="actions" style="margin-top:10px;">
+    <button onclick="closeRebirth()">返回村莊</button>
+  </div>
+</div>
+
 <!-- 商店 -->
 <div id="screen-shop" class="panel hidden">
   <div class="panel-title">🛒 村莊商店 <span class="subtitle" id="shopMoney"></span></div>
-
-  <!-- 批量購買模式切換 -->
   <div class="shop-batch-bar">
     <span class="subtitle" style="margin-right:8px;">購買數量：</span>
     <button class="batch-btn active" data-batch="1"   onclick="setShopBatch(1)">×1</button>
@@ -208,7 +200,6 @@
     <button class="batch-btn"        data-batch="10"  onclick="setShopBatch(10)">×10</button>
     <button class="batch-btn"        data-batch="max" onclick="setShopBatch('max')">Max</button>
   </div>
-
   <div id="shopList"></div>
   <div class="actions" style="margin-top:10px;">
     <button onclick="closeShop()">離開商店</button>
@@ -279,9 +270,7 @@
 <div id="screen-gamble" class="panel hidden">
   <div class="panel-title">🎰 賭場</div>
   <div id="gambleContent"></div>
-  <div class="actions" style="margin-top:10px;">
-    <button onclick="closeGamble()">離開賭場</button>
-  </div>
+  <div class="actions" style="margin-top:10px;"><button onclick="closeGamble()">離開賭場</button></div>
 </div>
 
 <!-- 副本 -->
@@ -333,10 +322,7 @@
     <span>防禦 <span class="val" id="battleDef"></span></span>
     <span>藥水 <span class="val" id="battlePotion"></span></span>
   </div>
-
-  <!-- 寵物顯示區 -->
   <div id="petBattleBar" style="margin-top:8px;"></div>
-
   <div style="margin-top:12px;">
     <div class="panel-title">
       👹 <span id="monsterName">野生史萊姆</span>
@@ -354,7 +340,6 @@
     </div>
     <div class="subtitle" id="monsterSkill" style="margin-top:4px;"></div>
   </div>
-
   <div class="actions" style="margin-top:14px;">
     <button id="btnAttack" onclick="playerAttack()">普通攻擊</button>
     <button id="btnSkill"  class="skill"  onclick="playerSkill()">職業技能</button>
@@ -364,10 +349,8 @@
     <button id="btnCombo"  class="gold hidden" onclick="playerCombo()">⚡ 連擊爆發</button>
     <button id="btnAuto"   class="gold" onclick="toggleAuto()">自動</button>
   </div>
-
   <div id="fruitSkillBar"></div>
   <div id="roleSkillInfo" style="text-align:center;font-size:11px;margin:4px 0;"></div>
-
   <div class="actions">
     <button id="btnReturn" onclick="returnToTown()" style="background:#546e7a;">🏘️ 返回村莊</button>
   </div>
@@ -378,20 +361,19 @@
   <div id="log"></div>
 </div>
 
-<!-- ★ 腳本載入順序（很重要，不要改） -->
-<script src="data.js">        </script>
-<script src="core.js">        </script>
-<script src="battle.js">      </script>
-<script src="town.js">        </script>
-<script src="dungeon.js">     </script>
-<script src="guild.js">       </script>
-<script src="pet.js">         </script>
-<script src="gamble.js">      </script>
-<script src="lz-string.js">   </script>
-<script src="save.js">        </script>
-<script src="main.js">        </script>
-<script src="leaderboard.js"> </script>
-<script src="cloud.js">       </script>
-<script src="rebirth.js">     </script>
+<script src="data.js"></script>
+<script src="core.js"></script>
+<script src="battle.js"></script>
+<script src="town.js"></script>
+<script src="dungeon.js"></script>
+<script src="guild.js"></script>
+<script src="pet.js"></script>
+<script src="gamble.js"></script>
+<script src="lz-string.js"></script>
+<script src="save.js"></script>
+<script src="main.js"></script>
+<script src="leaderboard.js"></script>
+<script src="cloud.js"></script>
+<script src="rebirth.js"></script>
 </body>
 </html>
