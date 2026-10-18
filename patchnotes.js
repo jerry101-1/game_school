@@ -21,10 +21,10 @@ function renderPatchNotes() {
     {
       version: 'v1.5.1',
       date: '2026-10-15',
-      color: '#c5b8se',
-      change: [
-        '轉生系統改善(加入X1,X10,X100,max)',
-        '排行榜改善',
+      color: '#ba68c8', // 修正了不合法的顏色代碼
+      changes: [        // 修正了 change -> changes
+        '🌟 轉生系統改善：加入 X1, X10, X100, Max 按鈕，不用再點到手痠。',
+        '📈 排行榜數值優化：支援 K, M, B, T 等單位縮寫，解決數字爆版問題。',
       ]
     },
     {
