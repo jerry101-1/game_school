@@ -30,36 +30,56 @@ function renderRebirth() {
     <div class="panel" style="margin-top:15px;">
       <div class="panel-title">✨ 消耗點數強化 (永久生效)</div>
       
-      <div class="talent-item">
-        <div class="talent-info">
+      <div class="talent-item" style="flex-wrap: wrap; gap: 8px;">
+        <div class="talent-info" style="min-width: 150px;">
           <div class="talent-name">⚔️ 攻擊強化 <span style="color:#4caf50;">+${S.rebirthBonusAtk || 0}%</span></div>
-          <div class="talent-desc">每次消耗 1 點，永久增加 10% 攻擊力</div>
+          <div class="talent-desc">每消耗 1 點，永久增加 10% 攻擊</div>
         </div>
-        <button class="danger small" onclick="upgradeRebirth('atk')">+1</button>
+        <div style="display:flex; gap:4px;">
+          <button class="danger small" onclick="upgradeRebirth('atk', 1)">+1</button>
+          <button class="danger small" onclick="upgradeRebirth('atk', 10)">+10</button>
+          <button class="danger small" onclick="upgradeRebirth('atk', 100)">+100</button>
+          <button class="gold small" onclick="upgradeRebirth('atk', 'max')">Max</button>
+        </div>
       </div>
       
-      <div class="talent-item">
-        <div class="talent-info">
+      <div class="talent-item" style="flex-wrap: wrap; gap: 8px;">
+        <div class="talent-info" style="min-width: 150px;">
           <div class="talent-name">🩷 生命強化 <span style="color:#4caf50;">+${S.rebirthBonusHp || 0}%</span></div>
-          <div class="talent-desc">每次消耗 1 點，永久增加 10% 最大 HP</div>
+          <div class="talent-desc">每消耗 1 點，永久增加 10% HP</div>
         </div>
-        <button class="danger small" onclick="upgradeRebirth('hp')">+1</button>
+        <div style="display:flex; gap:4px;">
+          <button class="danger small" onclick="upgradeRebirth('hp', 1)">+1</button>
+          <button class="danger small" onclick="upgradeRebirth('hp', 10)">+10</button>
+          <button class="danger small" onclick="upgradeRebirth('hp', 100)">+100</button>
+          <button class="gold small" onclick="upgradeRebirth('hp', 'max')">Max</button>
+        </div>
       </div>
 
-      <div class="talent-item">
-        <div class="talent-info">
+      <div class="talent-item" style="flex-wrap: wrap; gap: 8px;">
+        <div class="talent-info" style="min-width: 150px;">
           <div class="talent-name">⭐ 經驗強化 <span style="color:#4caf50;">+${S.rebirthBonusExp || 0}%</span></div>
-          <div class="talent-desc">每次消耗 1 點，永久增加 20% 經驗獲取</div>
+          <div class="talent-desc">每消耗 1 點，永久增加 20% 經驗</div>
         </div>
-        <button class="danger small" onclick="upgradeRebirth('exp')">+1</button>
+        <div style="display:flex; gap:4px;">
+          <button class="danger small" onclick="upgradeRebirth('exp', 1)">+1</button>
+          <button class="danger small" onclick="upgradeRebirth('exp', 10)">+10</button>
+          <button class="danger small" onclick="upgradeRebirth('exp', 100)">+100</button>
+          <button class="gold small" onclick="upgradeRebirth('exp', 'max')">Max</button>
+        </div>
       </div>
 
-      <div class="talent-item">
-        <div class="talent-info">
+      <div class="talent-item" style="flex-wrap: wrap; gap: 8px;">
+        <div class="talent-info" style="min-width: 150px;">
           <div class="talent-name">💰 金幣強化 <span style="color:#4caf50;">+${S.rebirthBonusGold || 0}%</span></div>
-          <div class="talent-desc">每次消耗 1 點，永久增加 20% 金幣獲取</div>
+          <div class="talent-desc">每消耗 1 點，永久增加 20% 金幣</div>
         </div>
-        <button class="danger small" onclick="upgradeRebirth('gold')">+1</button>
+        <div style="display:flex; gap:4px;">
+          <button class="danger small" onclick="upgradeRebirth('gold', 1)">+1</button>
+          <button class="danger small" onclick="upgradeRebirth('gold', 10)">+10</button>
+          <button class="danger small" onclick="upgradeRebirth('gold', 100)">+100</button>
+          <button class="gold small" onclick="upgradeRebirth('gold', 'max')">Max</button>
+        </div>
       </div>
     </div>
   `;
