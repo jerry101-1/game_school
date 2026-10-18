@@ -19,6 +19,14 @@ function renderPatchNotes() {
   // ★ 在這裡維護你的更新紀錄
   const notes = [
     {
+      version: 'v1.5.1',
+      date: '2026-10-15',
+      color: '#c5b8se',
+      change: [
+        '轉生系統改善(加入X1,X10,X100,max)',
+      ]
+    }
+    {
       version: 'v1.5.0',
       date: '2026-10-15',
       color: '#4caf50',
