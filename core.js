@@ -91,9 +91,9 @@ function showScreen(name) {
    'screen-adventure','screen-battle','screen-job','screen-forge',
    'screen-dungeon','screen-guild','screen-pet','screen-cloud',
    'screen-train','screen-collect','screen-system','screen-gamble',
-   'screen-leaderboard','screen-rebirth']
-    .forEach(s => hide(s));
-  if (name) show(name);
+   'screen-leaderboard', 'screen-rebirth']   // ★ 確保有這行
+    .forEach(s => { const el = document.getElementById(s); if (el) el.classList.add('hidden'); });
+  if (name) { const el = document.getElementById(name); if (el) el.classList.remove('hidden'); }
 }
 
 // ── 屬性名稱 ──
