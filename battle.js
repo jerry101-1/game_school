@@ -470,6 +470,23 @@ function toggleAuto() {
 
 function autoDecide() {
   if (!S.inBattle || S.gameOver) return;
+  
+  // ★ 如果正在寶箱畫面，自動選第一個
+  if (!document.getElementById('screen-loot').classList.contains('hidden')) {
+    const lootCards = document.querySelectorAll('#lootList .loot-card');
+    if (lootCards.length > 0) {
+      lootCards[0].click();
+    }
+    return;
+  }
+
+  // ★ 如果正在戰鬥結算，自動繼續探索
+  if (!document.getElementById('btnContinue').classList.contains('hidden')) {
+    continueAdventure();
+    return;
+  }
+
+  // 一般戰鬥邏輯
   if (S.hp < effMaxHp()*0.3 && S.potion > 0) { playerPotion(); return; }
   if (S.combo >= 5) { playerCombo(); return; }
   if (S.activeFruit && S.fruits[S.activeFruit] && S.fruitSkillCD === 0) {
