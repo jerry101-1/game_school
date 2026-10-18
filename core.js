@@ -91,7 +91,7 @@ function showScreen(name) {
    'screen-adventure','screen-battle','screen-job','screen-forge',
    'screen-dungeon','screen-guild','screen-pet','screen-cloud',
    'screen-train','screen-collect','screen-system','screen-gamble',
-   'screen-leaderboard']
+   'screen-leaderboard','screen-rebirth']
     .forEach(s => hide(s));
   if (name) show(name);
 }
