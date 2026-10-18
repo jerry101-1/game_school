@@ -91,7 +91,7 @@ function showScreen(name) {
    'screen-adventure','screen-battle','screen-job','screen-forge',
    'screen-dungeon','screen-guild','screen-pet','screen-cloud',
    'screen-train','screen-collect','screen-system','screen-gamble',
-   'screen-leaderboard', 'screen-rebirth','screen-patch']   // ★ 確保有這行
+   'screen-leaderboard', 'screen-rebirth', 'screen-patch']
     .forEach(s => { const el = document.getElementById(s); if (el) el.classList.add('hidden'); });
   if (name) { const el = document.getElementById(name); if (el) el.classList.remove('hidden'); }
 }
