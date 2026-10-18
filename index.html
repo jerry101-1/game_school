@@ -166,6 +166,10 @@
       <span class="mi-icon">🌟</span>
       <div><div class="mi-name">無限轉生</div><div class="mi-desc">重置進度換取永久加成</div></div>
     </button>
+    <button class="menu-item" onclick="openPatchNotes()">
+      <span class="mi-icon">📜</span>
+      <div><div class="mi-name">更新日誌</div><div class="mi-desc">查看最新版本與修正內容</div></div>
+    </button>
   </div>
   <div class="actions" style="margin-top:10px;">
     <button onclick="backToTown()">← 返回村莊</button>
@@ -187,6 +191,15 @@
   <div id="rebirthContent"></div>
   <div class="actions" style="margin-top:10px;">
     <button onclick="closeRebirth()">返回村莊</button>
+  </div>
+</div>
+
+<!-- 更新日誌 -->
+<div id="screen-patch" class="panel hidden">
+  <div class="panel-title">📜 更新日誌</div>
+  <div id="patchContent" style="max-height: 500px; overflow-y: auto;"></div>
+  <div class="actions" style="margin-top:10px;">
+    <button onclick="closePatchNotes()">關閉</button>
   </div>
 </div>
 
