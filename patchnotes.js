@@ -75,7 +75,7 @@ function renderPatchNotes() {
   ];
 
   let html = `<div class="subtitle" style="text-align:center;margin-bottom:15px;">
-    目前版本：<b style="color:#4fc3f7;">v1.5.0</b>
+    目前版本：<b style="color:#4fc3f7;">v1.5.1</b>
   </div>`;
 
   notes.forEach(note => {
