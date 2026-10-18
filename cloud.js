@@ -221,15 +221,15 @@ async function openCloudLeaderboard() {
   }
 
   const CATEGORIES = {
-    level: { name: '最高等級', icon: '⭐', format: v => `Lv.${v}` },
-    atk: { name: '最高攻擊力', icon: '⚔️', format: v => v.toLocaleString() },
-    maxHp: { name: '最高 HP', icon: '🩷', format: v => v.toLocaleString() },
-    money: { name: '最多金幣', icon: '💰', format: v => v.toLocaleString() },
-    abyssBest: { name: '深淵最高層', icon: '🌀', format: v => `第 ${v} 層` },
-    killCount: { name: '最多擊殺', icon: '💀', format: v => v.toLocaleString() },
-    maxCombo: { name: '最高連擊', icon: '🔥', format: v => `${v} 連擊` },
+    level: { name: '最高等級', icon: '⭐', format: v => `Lv.${formatNumber(v)}` },
+    atk: { name: '最高攻擊力', icon: '⚔️', format: v => formatNumber(v) },
+    maxHp: { name: '最高 HP', icon: '🩷', format: v => formatNumber(v) },
+    money: { name: '最多金幣', icon: '💰', format: v => formatNumber(v) },
+    abyssBest: { name: '深淵最高層', icon: '🌀', format: v => `第 ${formatNumber(v)} 層` },
+    killCount: { name: '最多擊殺', icon: '💀', format: v => formatNumber(v) },
+    maxCombo: { name: '最高連擊', icon: '🔥', format: v => `${formatNumber(v)} 連擊` },
   };
-
+  
   let html = `<div class="subtitle" style="text-align:center;padding:8px;">
     ☁ 全球排行榜
   </div>
