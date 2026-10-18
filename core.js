@@ -54,6 +54,14 @@ const S = {
   //排行
   fastestBossTime: 99999,
   bossStartTime: null,
+
+   // ★ 轉生系統
+  rebirthCount: 0,       // 轉生次數
+  rebirthPoints: 0,      // 剩餘轉生點數
+  rebirthBonusAtk: 0,    // 轉生永久攻擊加成 (乘法%)
+  rebirthBonusHp: 0,     // 轉生永久HP加成 (乘法%)
+  rebirthBonusExp: 0,    // 轉生永久經驗加成 (乘法%)
+  rebirthBonusGold: 0,   // 轉生永久金幣加成 (乘法%)
 };
 
 // ── DOM 工具 ──
@@ -527,4 +535,111 @@ function updateFavicon(hpPct) {
   } catch(e) {
     // 靜默失敗
   }
+}
+// ============================================================
+//  ★ 數字格式化
+// ============================================================
+function formatNumber(num) {
+  if (num === undefined || num === null || isNaN(num)) return '0';
+  if (num < 1000) return Math.floor(num).toString();
+  
+  const units = ['', 'K', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No', 'Dc', 'Ud', 'Dd'];
+  const order = Math.floor(Math.log10(num) / 3);
+  
+  if (order >= units.length) return num.toExponential(2);
+  
+  const unit = units[order];
+  const scaled = num / Math.pow(1000, order);
+  
+  return scaled.toFixed(2).replace(/\.00$/, '') + unit;
+}
+
+// ============================================================
+//  ★ 轉生系統
+// ============================================================
+function getRebirthPointsGained() {
+  // 計算公式：等級/10 + 突破等級/5 + 章節*10
+  const fromLevel = Math.floor((S.level || 0) / 10);
+  const fromBreak = Math.floor((S.breakthroughLevel || 0) / 5);
+  const fromChapter = (S.chapter || 1) * 10;
+  return fromLevel + fromBreak + fromChapter;
+}
+
+function doRebirth() {
+  const points = getRebirthPointsGained();
+  if (points < 50) {
+    log('⚠️ 轉生點數太少（至少需要獲得 50 點才能轉生）', 'lose');
+    return;
+  }
+  if (!confirm(`確定要轉生嗎？\n\n你將失去所有等級、裝備、金幣，但會獲得 ${points} 點轉生點數！\n\n（職業、果實、寵物、成就會保留）`)) return;
+
+  S.rebirthCount = (S.rebirthCount || 0) + 1;
+  S.rebirthPoints = (S.rebirthPoints || 0) + points;
+
+  // 重置等級與進度
+  S.level = 1;
+  S.exp = 0;
+  S.expNeeded = 100;
+  S.money = 0;
+  S.chapter = 1;
+  S.killCount = 0;
+  S.breakthroughLevel = 0;
+  S.breakthroughPoints = 0;
+  S.talentPoints = 0;
+  S.talents = {};
+  S.inventory = [];
+  S.equipment = {weapon:null, armor:null, accessory:null};
+  
+  // 重新套用職業基礎
+  const role = ROLES[S.roleType];
+  S.maxHp = role.hp;
+  S.hp = role.hp;
+  S.atk = role.atk;
+  S.def = role.def;
+  if (S.roleType === 3) S.playerDodge = 15; else if (S.roleType === 12) S.playerDodge = 10; else S.playerDodge = 5;
+
+  updateTownUI();
+  saveGame();
+  log(`🌟 轉生成功！第 ${S.rebirthCount} 次轉生，獲得 ${points} 轉生點數！`, 'win');
+  showScreen('screen-town');
+}
+
+function upgradeRebirth(type) {
+  if (S.rebirthPoints < 1) { log('沒有轉生點數！', 'lose'); return; }
+  
+  if (type === 'atk') {
+    S.rebirthPoints--;
+    S.rebirthBonusAtk += 10; // 每次 +10% 攻擊
+    log('🌟 兌換成功：永久攻擊力 +10%', 'win');
+  } else if (type === 'hp') {
+    S.rebirthPoints--;
+    S.rebirthBonusHp += 10; // 每次 +10% HP
+    log('🌟 兌換成功：永久最大 HP +10%', 'win');
+  } else if (type === 'exp') {
+    S.rebirthPoints--;
+    S.rebirthBonusExp += 20; // 每次 +20% 經驗
+    log('🌟 兌換成功：永久經驗 +20%', 'win');
+  } else if (type === 'gold') {
+    S.rebirthPoints--;
+    S.rebirthBonusGold += 20; // 每次 +20% 金幣
+    log('🌟 兌換成功：永久金幣 +20%', 'win');
+  }
+  renderRebirth();
+  updateTownUI();
+}
+
+// ============================================================
+//  ★ 屬性計算加入轉生加成
+// ============================================================
+// 覆蓋原本的 effAtk、effMaxHp、effExp、effGold (請覆蓋原本在 core.js 的定義)
+function effAtk() {
+  const t = getTalentBonus(), b = getBreakthroughBonus(),
+        g = getGuildBonus(), p = getPetBonus();
+  const base = S.atk * (1 + (t.atkPct + b.atkPct + g.atkPct + p.atkPct)/100);
+  return Math.floor(base * (1 + (S.rebirthBonusAtk || 0) / 100));
+}
+function effMaxHp() {
+  const t = getTalentBonus(), b = getBreakthroughBonus();
+  const base = S.maxHp * (1 + (t.hpPct + b.hpPct)/100);
+  return Math.max(1, Math.floor(base * (1 + (S.rebirthBonusHp || 0) / 100)));
 }
