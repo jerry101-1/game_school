@@ -48,20 +48,18 @@ const S = {
   autoMode:false, inBattle:false, gameOver:false, isBossFight:false,
   playerDodge:5, buttonLocked:false,
 
-  //賭場
+  // 賭場 / 排行榜
   gambleLog: [],
-
-  //排行
   fastestBossTime: 99999,
   bossStartTime: null,
 
-   // ★ 轉生系統
-  rebirthCount: 0,       // 轉生次數
-  rebirthPoints: 0,      // 剩餘轉生點數
-  rebirthBonusAtk: 0,    // 轉生永久攻擊加成 (乘法%)
-  rebirthBonusHp: 0,     // 轉生永久HP加成 (乘法%)
-  rebirthBonusExp: 0,    // 轉生永久經驗加成 (乘法%)
-  rebirthBonusGold: 0,   // 轉生永久金幣加成 (乘法%)
+  // ★ 轉生系統
+  rebirthCount: 0,       
+  rebirthPoints: 0,      
+  rebirthBonusAtk: 0,    
+  rebirthBonusHp: 0,     
+  rebirthBonusExp: 0,    
+  rebirthBonusGold: 0,   
 };
 
 // ── DOM 工具 ──
@@ -99,10 +97,21 @@ function showScreen(name) {
 // ── 屬性名稱 ──
 function elemName(e) { return {1:'火',2:'冰',3:'雷',4:'物理'}[e] || '無'; }
 
-// ── 天賦加成 ──
+// ── 數字格式化 ──
+function formatNumber(num) {
+  if (num === undefined || num === null || isNaN(num)) return '0';
+  if (num < 1000) return Math.floor(num).toString();
+  const units = ['', 'K', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No', 'Dc', 'Ud', 'Dd'];
+  const order = Math.floor(Math.log10(num) / 3);
+  if (order >= units.length) return num.toExponential(2);
+  const unit = units[order];
+  const scaled = num / Math.pow(1000, order);
+  return scaled.toFixed(2).replace(/\.00$/, '') + unit;
+}
+
+// ── 各種加成計算 ──
 function getTalentBonus() {
-  const b = {atkPct:0,crit:0,critDmg:0,pierce:0,hpPct:0,defPct:0,
-             dodge:0,regen:0,gold:0,exp:0,cd:0,fruitDmg:0};
+  const b = {atkPct:0,crit:0,critDmg:0,pierce:0,hpPct:0,defPct:0,dodge:0,regen:0,gold:0,exp:0,cd:0,fruitDmg:0};
   for (const [id, lv] of Object.entries(S.talents)) {
     const t = TALENTS[id];
     if (!t || !lv) continue;
@@ -121,9 +130,7 @@ function allTalentsMaxed() {
 function getBreakthroughBonus() {
   const lv = S.breakthroughLevel || 0;
   const ms = S.breakthroughMilestones || {};
-  const b = {atkPct:lv*2, defPct:lv*2, hpPct:lv*2,
-             crit:lv*3, critDmg:lv*5, exp:lv*3, gold:lv*3,
-             lifesteal:0, regen:0, cd:0};
+  const b = {atkPct:lv*2, defPct:lv*2, hpPct:lv*2, crit:lv*3, critDmg:lv*5, exp:lv*3, gold:lv*3, lifesteal:0, regen:0, cd:0};
   if (ms.crit)      b.crit += 5;
   if (ms.critDmg)   b.critDmg += 20;
   if (ms.cd)        b.cd += 1;
@@ -135,21 +142,16 @@ function getBreakthroughBonus() {
   return b;
 }
 
-// ── 公會加成 ──
 function getGuildBonus() {
   if (!S.guild.id) return {atkPct:0,crit:0,critDmg:0,exp:0,gold:0};
   const g = GUILDS[S.guild.id];
   if (!g) return {atkPct:0,crit:0,critDmg:0,exp:0,gold:0};
   return {
-    atkPct: g.bonus.atkPct || 0,
-    crit:   g.bonus.crit || 0,
-    critDmg:g.bonus.critDmg || 0,
-    exp:    g.bonus.exp || 0,
-    gold:   g.bonus.gold || 0,
+    atkPct: g.bonus.atkPct || 0, crit: g.bonus.crit || 0,
+    critDmg:g.bonus.critDmg || 0, exp: g.bonus.exp || 0, gold: g.bonus.gold || 0,
   };
 }
 
-// ── 寵物加成（被動）──
 function getPetBonus() {
   if (!S.activePet || !S.pets[S.activePet]) return {atkPct:0,exp:0,gold:0,crit:0,lifesteal:0,regen:0};
   const pet = S.pets[S.activePet];
@@ -167,11 +169,11 @@ function getPetBonus() {
   return b;
 }
 
-// ── 有效屬性（含所有加成） ──
+// ── 有效屬性（結合轉生加成） ──
 function effAtk() {
-  const t = getTalentBonus(), b = getBreakthroughBonus(),
-        g = getGuildBonus(), p = getPetBonus();
-  return Math.floor(S.atk * (1 + (t.atkPct + b.atkPct + g.atkPct + p.atkPct)/100));
+  const t = getTalentBonus(), b = getBreakthroughBonus(), g = getGuildBonus(), p = getPetBonus();
+  const base = S.atk * (1 + (t.atkPct + b.atkPct + g.atkPct + p.atkPct)/100);
+  return Math.floor(base * (1 + (S.rebirthBonusAtk || 0) / 100));
 }
 function effDef() {
   const t = getTalentBonus(), b = getBreakthroughBonus();
@@ -179,8 +181,8 @@ function effDef() {
 }
 function effMaxHp() {
   const t = getTalentBonus(), b = getBreakthroughBonus();
-  const val = Math.floor(S.maxHp * (1 + (t.hpPct + b.hpPct)/100));
-  return Math.max(1, val);  // ★ 保護：最低 1 HP
+  const base = S.maxHp * (1 + (t.hpPct + b.hpPct)/100);
+  return Math.max(1, Math.floor(base * (1 + (S.rebirthBonusHp || 0) / 100)));
 }
 function effDodge()    { return S.playerDodge + getTalentBonus().dodge; }
 function effCritRate() {
@@ -192,51 +194,38 @@ function effCritDmg() {
   return S.critDmg + t.critDmg + b.critDmg + g.critDmg;
 }
 
-// ── 突破花費（邊際遞減）──
+// ── 突破與兌換 ──
 function breakthroughCost() {
   const lv = S.breakthroughLevel || 0;
   if (lv < 50) return 500 * (lv + 1);
   return 500 * 50 + 100 * (lv - 49);
 }
 
-// ── 突破：升 1 級 ──
 function doBreakthrough() {
   if (!allTalentsMaxed()) { log('需要先將所有天賦點滿！', 'lose'); return; }
   if ((S.breakthroughPoints || 0) <= 0) { log('沒有突破點！', 'lose'); return; }
   const cost = breakthroughCost();
   if (S.money < cost) { log(`金幣不足！需要 ${cost.toLocaleString()} 金。`, 'lose'); return; }
-  S.money -= cost;
-  S.breakthroughPoints--;
-  S.breakthroughLevel = (S.breakthroughLevel || 0) + 1;
+  S.money -= cost; S.breakthroughPoints--; S.breakthroughLevel++;
   const ms = BREAKTHROUGH_MILESTONES[S.breakthroughLevel];
   if (ms && !S.breakthroughMilestones[ms.key]) {
     S.breakthroughMilestones[ms.key] = true;
     log(`✦ 突破里程碑 Lv.${S.breakthroughLevel}：${ms.name}！`, 'win');
   }
   log(`✦ 突破成功！突破等級 Lv.${S.breakthroughLevel}`, 'win');
-  renderTalent();
-  updateTownUI();
-  checkAchievements();
+  renderTalent(); updateTownUI(); checkAchievements();
 }
 
-// ── 突破 Max：一次升多級 ──
 function doBreakthroughMax() {
   if (!allTalentsMaxed()) { log('需要先將所有天賦點滿！', 'lose'); return; }
   let bp = S.breakthroughPoints || 0;
   if (bp <= 0) { log('沒有突破點！', 'lose'); return; }
-
   let leveled = 0, spentBp = 0, spentGold = 0;
   const milestonesUnlocked = [];
-
   while (bp > 0) {
     const cost = breakthroughCost();
     if (S.money < cost) break;
-    S.money -= cost;
-    bp--;
-    S.breakthroughLevel++;
-    leveled++;
-    spentBp++;
-    spentGold += cost;
+    S.money -= cost; bp--; S.breakthroughLevel++; leveled++; spentBp++; spentGold += cost;
     const ms = BREAKTHROUGH_MILESTONES[S.breakthroughLevel];
     if (ms && !S.breakthroughMilestones[ms.key]) {
       S.breakthroughMilestones[ms.key] = true;
@@ -244,96 +233,78 @@ function doBreakthroughMax() {
     }
     if (leveled > 10000) break;
   }
-
   S.breakthroughPoints = bp;
-  if (leveled === 0) {
-    log(`⚠ 金幣不足！下一級需要 ${breakthroughCost().toLocaleString()} 金。`, 'lose');
-    return;
-  }
+  if (leveled === 0) { log(`⚠ 金幣不足！下一級需要 ${breakthroughCost().toLocaleString()} 金。`, 'lose'); return; }
   log(`✦ 一次突破 ${leveled} 級！花費 ${spentBp} 突破點 + ${spentGold.toLocaleString()} 金幣`, 'win');
-  log(`✦ 突破等級：Lv.${S.breakthroughLevel}`, 'win');
   milestonesUnlocked.forEach(m => log(`✦ 解鎖里程碑：${m}`, 'win'));
-  if (bp > 0) log(`（剩餘突破點：${bp}，金幣不足無法繼續）`, 'system');
-  renderTalent();
-  updateTownUI();
-  checkAchievements();
+  renderTalent(); updateTownUI(); checkAchievements();
 }
 
-// ── 突破點兌換 ──
 function exchangeBreakthrough(type) {
   const bp = S.breakthroughPoints || 0;
   if (type === 'money') {
     if (bp < 10) { log('突破點不足！需要 10 點。', 'lose'); return; }
-    S.breakthroughPoints -= 10;
-    S.money += 50000;
-    log('💰 兌換成功：10 突破點 → 50,000 金幣', 'win');
+    S.breakthroughPoints -= 10; S.money += 50000; log('💰 兌換成功：10 突破點 → 50,000 金幣', 'win');
   } else if (type === 'potion') {
     if (bp < 5) { log('突破點不足！需要 5 點。', 'lose'); return; }
-    S.breakthroughPoints -= 5;
-    S.potion += 3;
-    log('🧪 兌換成功：5 突破點 → 3 瓶藥水', 'win');
-  } else if (type === 'exp') {
-    S.exp += 10000;
-    log('⭐ 兌換成功：1 天賦點 → 10,000 經驗', 'win');
-  } else if (type === 'fruit') {
-    // 隨機獲得一顆果實
-    const id = pickFruit();
-    if (!S.fruits[id]) S.fruits[id] = {level:1, exp:0};
-    else S.fruits[id].exp += 100;
-    log(`🍇 兌換成功：1 天賦點 → 隨機果實（${FRUITS[id].name}）`, 'win');
-  } else if (type === 'pet') {
-    // 隨機獲得一隻寵物
-    grantRandomPet();
-    log('🐾 兌換成功：1 天賦點 → 隨機寵物', 'win');
-}
-  
-  renderTalent();
-  updateTownUI();
+    S.breakthroughPoints -= 5; S.potion += 3; log('🧪 兌換成功：5 突破點 → 3 瓶藥水', 'win');
+  }
+  renderTalent(); updateTownUI();
 }
 
-// ── 天賦點兌換 ──
 function exchangeTalent(type) {
   if (S.talentPoints <= 0) { log('沒有天賦點！', 'lose'); return; }
   if (!allTalentsMaxed()) { log('天賦還沒點滿，先去點天賦！', 'lose'); return; }
-  
   S.talentPoints--;
-  if (type === 'money') {
-    S.money += 5000;
-    log('💰 兌換成功：1 天賦點 → 5,000 金幣', 'win');
-  } else if (type === 'bp') {
-    S.breakthroughPoints = (S.breakthroughPoints || 0) + 1;
-    log('✦ 兌換成功：1 天賦點 → 1 突破點', 'win');
-  } else if (type === 'potion') {
-    S.potion += 5;
-    log('🧪 兌換成功：1 天賦點 → 5 瓶藥水', 'win');
-  }
-  renderTalent();
-  updateTownUI();
+  if (type === 'money') { S.money += 5000; log('💰 兌換成功：1 天賦點 → 5,000 金幣', 'win'); }
+  else if (type === 'bp') { S.breakthroughPoints = (S.breakthroughPoints || 0) + 1; log('✦ 兌換成功：1 天賦點 → 1 突破點', 'win'); }
+  else if (type === 'potion') { S.potion += 5; log('🧪 兌換成功：1 天賦點 → 5 瓶藥水', 'win'); }
+  renderTalent(); updateTownUI();
 }
 
-// ── 天賦點一次全部兌換 ──
 function exchangeTalentAll(type) {
   if (S.talentPoints <= 0) { log('沒有天賦點！', 'lose'); return; }
   if (!allTalentsMaxed()) { log('天賦還沒點滿！', 'lose'); return; }
-
   const count = S.talentPoints;
   if (count === 0) return;
-  
   if (!confirm(`確定要兌換 ${count} 點天賦點嗎？`)) return;
+  if (type === 'money') { const gain = count * 5000; S.money += gain; S.talentPoints = 0; log(`💰 兌換成功：${count} 天賦點 → ${gain.toLocaleString()} 金幣`, 'win'); }
+  else if (type === 'bp') { S.breakthroughPoints = (S.breakthroughPoints || 0) + count; S.talentPoints = 0; log(`✦ 兌換成功：${count} 天賦點 → ${count} 突破點`, 'win'); }
+  renderTalent(); updateTownUI(); checkAchievements();
+}
 
-  if (type === 'money') {
-    const gain = count * 5000;
-    S.money += gain;
-    S.talentPoints = 0;
-    log(`💰 兌換成功：${count} 天賦點 → ${gain.toLocaleString()} 金幣`, 'win');
-  } else if (type === 'bp') {
-    S.breakthroughPoints = (S.breakthroughPoints || 0) + count;
-    S.talentPoints = 0;
-    log(`✦ 兌換成功：${count} 天賦點 → ${count} 突破點`, 'win');
-  }
-  renderTalent();
-  updateTownUI();
-  checkAchievements();
+// ── 轉生系統 ──
+function getRebirthPointsGained() {
+  const fromLevel = Math.floor((S.level || 0) / 10);
+  const fromBreak = Math.floor((S.breakthroughLevel || 0) / 5);
+  const fromChapter = (S.chapter || 1) * 10;
+  return fromLevel + fromBreak + fromChapter;
+}
+
+function doRebirth() {
+  const points = getRebirthPointsGained();
+  if (points < 50) { log('⚠️ 轉生點數太少（至少需要獲得 50 點才能轉生）', 'lose'); return; }
+  if (!confirm(`確定要轉生嗎？\n\n你將失去所有等級、裝備、金幣，但會獲得 ${points} 點轉生點數！\n\n（職業、果實、寵物、成就會保留）`)) return;
+  S.rebirthCount = (S.rebirthCount || 0) + 1;
+  S.rebirthPoints = (S.rebirthPoints || 0) + points;
+  S.level = 1; S.exp = 0; S.expNeeded = 100; S.money = 0; S.chapter = 1; S.killCount = 0;
+  S.breakthroughLevel = 0; S.breakthroughPoints = 0; S.talentPoints = 0; S.talents = {};
+  S.inventory = []; S.equipment = {weapon:null, armor:null, accessory:null};
+  const role = ROLES[S.roleType];
+  S.maxHp = role.hp; S.hp = role.hp; S.atk = role.atk; S.def = role.def;
+  if (S.roleType === 3) S.playerDodge = 15; else if (S.roleType === 12) S.playerDodge = 10; else S.playerDodge = 5;
+  updateTownUI(); saveGame();
+  log(`🌟 轉生成功！第 ${S.rebirthCount} 次轉生，獲得 ${points} 轉生點數！`, 'win');
+  showScreen('screen-town');
+}
+
+function upgradeRebirth(type) {
+  if (S.rebirthPoints < 1) { log('沒有轉生點數！', 'lose'); return; }
+  if (type === 'atk') { S.rebirthPoints--; S.rebirthBonusAtk += 10; log('🌟 兌換成功：永久攻擊力 +10%', 'win'); }
+  else if (type === 'hp') { S.rebirthPoints--; S.rebirthBonusHp += 10; log('🌟 兌換成功：永久最大 HP +10%', 'win'); }
+  else if (type === 'exp') { S.rebirthPoints--; S.rebirthBonusExp += 20; log('🌟 兌換成功：永久經驗 +20%', 'win'); }
+  else if (type === 'gold') { S.rebirthPoints--; S.rebirthBonusGold += 20; log('🌟 兌換成功：永久金幣 +20%', 'win'); }
+  renderRebirth(); updateTownUI();
 }
 
 // ── 職業技能查詢 ──
@@ -359,16 +330,13 @@ function gainRoleExp(baseExp) {
   return baseExp;
 }
 
-// ── 裝備生成 ──
+// ── 裝備生成與套用 ──
 function pickRarity(bonus = 0) {
   const r = Math.random() * 100 - bonus;
-  if (r < 1) return 6;
-  if (r < 5) return 5;
-  if (r < 15) return 4;
-  if (r < 35) return 3;
-  if (r < 65) return 2;
+  if (r < 1) return 6; if (r < 5) return 5; if (r < 15) return 4; if (r < 35) return 3; if (r < 65) return 2;
   return 1;
 }
+
 function genEquipment(level, forcedRarity) {
   const rarity = forcedRarity || pickRarity(0);
   const rar = RARITY[rarity];
@@ -385,11 +353,7 @@ function genEquipment(level, forcedRarity) {
     affixes.push({stat:'hp',val:v,label:`生命 +${v}`});
   } else {
     const v = Math.round((3 + level*1) * rar.mult);
-    const types = [
-      {stat:'atk',val:v,label:`攻擊 +${v}`},
-      {stat:'hp',val:Math.round(v*5),label:`生命 +${Math.round(v*5)}`},
-      {stat:'crit',val:Math.max(1,Math.round(v/3)),label:`爆擊率 +${Math.max(1,Math.round(v/3))}%`},
-    ];
+    const types = [{stat:'atk',val:v,label:`攻擊 +${v}`}, {stat:'hp',val:Math.round(v*5),label:`生命 +${Math.round(v*5)}`}, {stat:'crit',val:Math.max(1,Math.round(v/3)),label:`爆擊率 +${Math.max(1,Math.round(v/3))}%`}];
     affixes.push(types[rand(0,types.length-1)]);
   }
   const used = new Set(affixes.map(a=>a.stat));
@@ -400,8 +364,7 @@ function genEquipment(level, forcedRarity) {
       if (used.has(a.stat)) continue;
       const v = Math.max(1, Math.round((a.base + level*a.scale) * rar.mult));
       affixes.push({stat:a.stat,val:v,label:`${a.label} +${v}${a.pct?'%':''}`});
-      used.add(a.stat);
-      break;
+      used.add(a.stat); break;
     }
   }
   return {uid:'eq_'+Date.now()+'_'+Math.random().toString(36).slice(2,7),slot,name,rarity,level,affixes};
@@ -411,16 +374,16 @@ function applyEquipStats(item, sign = 1) {
   if (!item) return;
   for (const a of item.affixes) {
     switch(a.stat) {
-      case 'atk':       S.atk += sign * a.val; break;
-      case 'def':       S.def += sign * a.val; break;
-      case 'hp':        S.maxHp += sign * a.val; if (sign>0) S.hp += a.val; break;
-      case 'crit':      S.critRate += sign * a.val; break;
-      case 'critDmg':   S.critDmg += sign * a.val; break;
+      case 'atk': S.atk += sign * a.val; break;
+      case 'def': S.def += sign * a.val; break;
+      case 'hp': S.maxHp += sign * a.val; if (sign>0) S.hp += a.val; break;
+      case 'crit': S.critRate += sign * a.val; break;
+      case 'critDmg': S.critDmg += sign * a.val; break;
       case 'lifesteal': S.lifesteal += sign * a.val; break;
-      case 'reflect':   S.reflect += sign * a.val; break;
-      case 'dodge':     S.playerDodge += sign * a.val; break;
-      case 'gold':      S.goldBonus += sign * a.val; break;
-      case 'exp':       S.expBonus += sign * a.val; break;
+      case 'reflect': S.reflect += sign * a.val; break;
+      case 'dodge': S.playerDodge += sign * a.val; break;
+      case 'gold': S.goldBonus += sign * a.val; break;
+      case 'exp': S.expBonus += sign * a.val; break;
     }
   }
   if (S.hp > effMaxHp()) S.hp = effMaxHp();
@@ -483,16 +446,16 @@ function popupAchievement(name, desc) {
 // ── 村莊 UI 更新 ──
 function updateTownUI() {
   $('townRole').textContent = S.roleName;
-  $('townLevel').textContent = formatNumber(S.level);  // ★
+  $('townLevel').textContent = formatNumber(S.level);
   $('townRoleLv').textContent = formatNumber(S.roleLevel || 1);
   $('townBkLv').textContent = formatNumber(S.breakthroughLevel || 0);
-  $('townHp').textContent = `${formatNumber(S.hp)}/${formatNumber(effMaxHp())}`; // ★
-  $('townMoney').textContent = formatNumber(S.money); // ★
-  $('townAtk').textContent = formatNumber(effAtk()); // ★
-  $('townDef').textContent = formatNumber(effDef()); // ★
+  $('townHp').textContent = `${formatNumber(S.hp)}/${formatNumber(effMaxHp())}`;
+  $('townMoney').textContent = formatNumber(S.money);
+  $('townAtk').textContent = formatNumber(effAtk());
+  $('townDef').textContent = formatNumber(effDef());
   $('townPotion').textContent = formatNumber(S.potion);
   $('townChapter').textContent = formatNumber(S.chapter);
-  $('townExp').textContent = `${formatNumber(S.exp)}/${formatNumber(S.expNeeded)}`; // ★
+  $('townExp').textContent = `${formatNumber(S.exp)}/${formatNumber(S.expNeeded)}`;
   $('townKill').textContent = formatNumber(S.killCount);
   $('townTalent').textContent = formatNumber(S.talentPoints);
   $('townAbyss').textContent = formatNumber(S.abyssBest);
@@ -521,7 +484,7 @@ function toggleTownStats() {
   }
 }
 
-// ── 動態更新 favicon（依 HP 變化）──
+// ── 動態更新 favicon ──
 function updateFavicon(hpPct) {
   try {
     let link = document.querySelector("link[rel='icon']");
@@ -532,114 +495,5 @@ function updateFavicon(hpPct) {
     }
     const emoji = hpPct > 0.6 ? '⚔️' : hpPct > 0.3 ? '🛡️' : '💀';
     link.href = `data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>${emoji}</text></svg>`;
-  } catch(e) {
-    // 靜默失敗
-  }
-}
-// ============================================================
-//  ★ 數字格式化
-// ============================================================
-function formatNumber(num) {
-  if (num === undefined || num === null || isNaN(num)) return '0';
-  if (num < 1000) return Math.floor(num).toString();
-  
-  const units = ['', 'K', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No', 'Dc', 'Ud', 'Dd'];
-  const order = Math.floor(Math.log10(num) / 3);
-  
-  if (order >= units.length) return num.toExponential(2);
-  
-  const unit = units[order];
-  const scaled = num / Math.pow(1000, order);
-  
-  return scaled.toFixed(2).replace(/\.00$/, '') + unit;
-}
-
-// ============================================================
-//  ★ 轉生系統
-// ============================================================
-function getRebirthPointsGained() {
-  // 計算公式：等級/10 + 突破等級/5 + 章節*10
-  const fromLevel = Math.floor((S.level || 0) / 10);
-  const fromBreak = Math.floor((S.breakthroughLevel || 0) / 5);
-  const fromChapter = (S.chapter || 1) * 10;
-  return fromLevel + fromBreak + fromChapter;
-}
-
-function doRebirth() {
-  const points = getRebirthPointsGained();
-  if (points < 50) {
-    log('⚠️ 轉生點數太少（至少需要獲得 50 點才能轉生）', 'lose');
-    return;
-  }
-  if (!confirm(`確定要轉生嗎？\n\n你將失去所有等級、裝備、金幣，但會獲得 ${points} 點轉生點數！\n\n（職業、果實、寵物、成就會保留）`)) return;
-
-  S.rebirthCount = (S.rebirthCount || 0) + 1;
-  S.rebirthPoints = (S.rebirthPoints || 0) + points;
-
-  // 重置等級與進度
-  S.level = 1;
-  S.exp = 0;
-  S.expNeeded = 100;
-  S.money = 0;
-  S.chapter = 1;
-  S.killCount = 0;
-  S.breakthroughLevel = 0;
-  S.breakthroughPoints = 0;
-  S.talentPoints = 0;
-  S.talents = {};
-  S.inventory = [];
-  S.equipment = {weapon:null, armor:null, accessory:null};
-  
-  // 重新套用職業基礎
-  const role = ROLES[S.roleType];
-  S.maxHp = role.hp;
-  S.hp = role.hp;
-  S.atk = role.atk;
-  S.def = role.def;
-  if (S.roleType === 3) S.playerDodge = 15; else if (S.roleType === 12) S.playerDodge = 10; else S.playerDodge = 5;
-
-  updateTownUI();
-  saveGame();
-  log(`🌟 轉生成功！第 ${S.rebirthCount} 次轉生，獲得 ${points} 轉生點數！`, 'win');
-  showScreen('screen-town');
-}
-
-function upgradeRebirth(type) {
-  if (S.rebirthPoints < 1) { log('沒有轉生點數！', 'lose'); return; }
-  
-  if (type === 'atk') {
-    S.rebirthPoints--;
-    S.rebirthBonusAtk += 10; // 每次 +10% 攻擊
-    log('🌟 兌換成功：永久攻擊力 +10%', 'win');
-  } else if (type === 'hp') {
-    S.rebirthPoints--;
-    S.rebirthBonusHp += 10; // 每次 +10% HP
-    log('🌟 兌換成功：永久最大 HP +10%', 'win');
-  } else if (type === 'exp') {
-    S.rebirthPoints--;
-    S.rebirthBonusExp += 20; // 每次 +20% 經驗
-    log('🌟 兌換成功：永久經驗 +20%', 'win');
-  } else if (type === 'gold') {
-    S.rebirthPoints--;
-    S.rebirthBonusGold += 20; // 每次 +20% 金幣
-    log('🌟 兌換成功：永久金幣 +20%', 'win');
-  }
-  renderRebirth();
-  updateTownUI();
-}
-
-// ============================================================
-//  ★ 屬性計算加入轉生加成
-// ============================================================
-// 覆蓋原本的 effAtk、effMaxHp、effExp、effGold (請覆蓋原本在 core.js 的定義)
-function effAtk() {
-  const t = getTalentBonus(), b = getBreakthroughBonus(),
-        g = getGuildBonus(), p = getPetBonus();
-  const base = S.atk * (1 + (t.atkPct + b.atkPct + g.atkPct + p.atkPct)/100);
-  return Math.floor(base * (1 + (S.rebirthBonusAtk || 0) / 100));
-}
-function effMaxHp() {
-  const t = getTalentBonus(), b = getBreakthroughBonus();
-  const base = S.maxHp * (1 + (t.hpPct + b.hpPct)/100);
-  return Math.max(1, Math.floor(base * (1 + (S.rebirthBonusHp || 0) / 100)));
+  } catch(e) {}
 }
