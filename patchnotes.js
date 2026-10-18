@@ -25,7 +25,7 @@ function renderPatchNotes() {
       change: [
         '轉生系統改善(加入X1,X10,X100,max)',
       ]
-    }
+    },
     {
       version: 'v1.5.0',
       date: '2026-10-15',
