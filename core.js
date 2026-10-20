@@ -524,3 +524,13 @@ function updateFavicon(hpPct) {
     link.href = `data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>${emoji}</text></svg>`;
   } catch(e) {}
 }
+
+function cleanupInventory() {
+  if (!S.inventory || S.inventory.length <= 50) return; 
+  S.inventory.sort((a, b) => (b.rarity - a.rarity) || (b.level - a.level));
+  const deletedCount = S.inventory.length - 50;
+  S.inventory = S.inventory.slice(0, 50);
+  if (deletedCount > 0) {
+    log(`🗑️ 【系統】背包已滿，自動分解了 ${deletedCount} 件裝備。`, 'system');
+  }
+}
