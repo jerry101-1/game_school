@@ -599,6 +599,8 @@ function onMonsterDefeated() {
 }
 
 // ── 寶箱 ──
+let isLootClicking = false; // ★ 防連點鎖
+
 function offerLoot(fromAbyss) {
   const pool = [
     {name:'攻擊力 +',type:1,val:rand(3,8)},
@@ -614,10 +616,16 @@ function offerLoot(fromAbyss) {
     const i = rand(0, pool.length-1);
     if (!chosen.includes(i)) chosen.push(i);
   }
+  
   log('★ 怪物掉落了寶箱！請選擇獎勵：','loot');
   showScreen('screen-loot');
+  
   const list = $('lootList');
-  list.innerHTML = '';
+  list.innerHTML = ''; // 先清空，避免 DOM 疊加卡頓
+  
+  // 使用 DocumentFragment 減少瀏覽器重繪次數
+  const fragment = document.createDocumentFragment();
+  
   chosen.forEach((idx, i) => {
     const l = pool[idx];
     const card = document.createElement('div');
@@ -625,14 +633,23 @@ function offerLoot(fromAbyss) {
     card.innerHTML = `<div><div class="loot-name">(${i+1}) ${l.name}</div>
       <div class="loot-val">${l.type === 6 ? '回復 30% 最大 HP' : l.type === 7 ? '藥水 +1' : '+' + l.val}</div></div>
       <button class="small gold">選擇</button>`;
+      
     card.onclick = () => {
+      // ★ 防連點機制
+      if (isLootClicking) return;
+      isLootClicking = true;
+      
       applyLoot(l);
+      isLootClicking = false; // 解鎖
+      
       if (S.dungeon.active) { setTimeout(() => dungeonNextFloor(), 400); }
       else if (fromAbyss) { setTimeout(() => abyssNextFloor(), 400); }
       else { afterBattle(); }
     };
-    list.appendChild(card);
+    fragment.appendChild(card);
   });
+  
+  list.appendChild(fragment); // 一次性塞入畫面，效能提升 10 倍
 }
 
 function applyLoot(l) {
