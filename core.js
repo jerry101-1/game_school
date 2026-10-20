@@ -84,14 +84,23 @@ function clearLog() { $('log').innerHTML = ''; }
 
 // ── 畫面切換 ──
 function showScreen(name) {
+  // 先隱藏所有畫面
   ['screen-start','screen-town','screen-shop','screen-loot',
    'screen-fruit','screen-equip','screen-talent','screen-abyss',
    'screen-adventure','screen-battle','screen-job','screen-forge',
    'screen-dungeon','screen-guild','screen-pet','screen-cloud',
    'screen-train','screen-collect','screen-system','screen-gamble',
    'screen-leaderboard', 'screen-rebirth', 'screen-patch']
-    .forEach(s => { const el = document.getElementById(s); if (el) el.classList.add('hidden'); });
-  if (name) { const el = document.getElementById(name); if (el) el.classList.remove('hidden'); }
+    .forEach(s => { 
+      const el = document.getElementById(s); 
+      if (el) el.classList.add('hidden'); 
+    });
+    
+  // 顯示目標畫面
+  if (name) { 
+    const el = document.getElementById(name); 
+    if (el) el.classList.remove('hidden'); 
+  }
 }
 
 // ── 屬性名稱 ──
