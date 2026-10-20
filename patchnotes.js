@@ -19,10 +19,18 @@ function renderPatchNotes() {
   // ★ 在這裡維護你的更新紀錄
   const notes = [
     {
+      version: 'v1.5.2',
+      date: '2026-10-20',
+      color: '#4fc6b2',
+      change: [
+        '📈優化按鈕與寶箱判斷'
+      ]
+    },
+    {
       version: 'v1.5.1',
       date: '2026-10-15',
       color: '#ba68c8',
-      changes: [ // 注意這裡是 changes
+      changes: [
         '🌟 轉生系統改善：加入 X1, X10, X100, Max 按鈕，不用再點到手痠。',
         '📈 排行榜數值優化：支援 K, M, B, T 等單位縮寫，解決數字爆版問題。'
       ]
