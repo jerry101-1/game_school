@@ -49,18 +49,29 @@ function startBattle() {
 
 function setButtonsEnabled(on) {
   S.buttonLocked = !on;
+  const ids = ['btnAttack','btnSkill','btnPower','btnDefend','btnPotion','btnAuto'];
+  
   if (!on) {
-    ['btnAttack','btnSkill','btnPower','btnDefend','btnPotion'].forEach(id => $(id).disabled = true);
-    $('btnAuto').disabled = false;
+    ids.forEach(id => { 
+      const el = $(id); 
+      if (el) el.disabled = true; 
+    });
     renderFruitSkillBar();
     return;
   }
-  $('btnAttack').disabled = false;
-  $('btnSkill').disabled = S.skillCD > 0;
-  $('btnPower').disabled = false;
-  $('btnDefend').disabled = false;
-  $('btnPotion').disabled = S.potion <= 0;
-  $('btnAuto').disabled = false;
+  
+  const setBtn = (id, isDisabled) => { 
+    const el = $(id); 
+    if (el) el.disabled = isDisabled; 
+  };
+  
+  setBtn('btnAttack', false);
+  setBtn('btnSkill', S.skillCD > 0);
+  setBtn('btnPower', false);
+  setBtn('btnDefend', false);
+  setBtn('btnPotion', S.potion <= 0);
+  setBtn('btnAuto', false);
+  
   renderFruitSkillBar();
 }
 
