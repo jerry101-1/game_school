@@ -588,12 +588,18 @@ function renderBreakthroughSection() {
     </div>
     <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:8px;">
       <button class="talent" style="background:#c62828;" ${canBreak?'':'disabled'} onclick="doBreakthrough()">
-        ✦ 突破提升（1 突破點 + ${cost.toLocaleString()} 金）
+        ✦ +1
+      </button>
+      <button class="talent" style="background:#ef6c00;" ${canBreak?'':'disabled'} onclick="doBreakthroughCustom(100)">
+        ✦ +100
+      </button>
+      <button class="talent" style="background:#f9a825;color:#111;" ${canBreak?'':'disabled'} onclick="doBreakthroughCustom(1000)">
+        ✦ +1000
       </button>
       <button class="talent" style="background:#8e24aa;" ${canBreakMax?'':'disabled'} onclick="doBreakthroughMax()">
-        ✦✦ 突破 Max（可升 ${maxLevels} 級）
+        ✦✦ Max（單次上限 1 萬級）
       </button>
-    </div>`;
+    </div>
 
   // 突破點兌換區
   if (bkPt >= 5) {
