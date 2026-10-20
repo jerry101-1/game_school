@@ -648,39 +648,72 @@ function applyLoot(l) {
 }
 
 function afterBattle() {
- S.buttonLocked = false;
+  S.buttonLocked = false;
+  showScreen('screen-battle');
   
-  // ★ 確保戰鬥畫面有被正確顯示
-  showScreen('screen-battle'); 
-
   if (S.inAbyss) { setTimeout(() => abyssNextFloor(), 600); return; }
   if (S.dungeon.active) { setTimeout(() => dungeonNextFloor(), 600); return; }
-  // 升級
+
+  // ==========================================
+  // ★ 極速升級邏輯（解決一次升幾千級卡死問題）
+  // ==========================================
+  let levelsGained = 0;
+  
   while (S.exp >= S.expNeeded) {
     S.exp -= S.expNeeded;
     S.level++;
+    levelsGained++;
     S.expNeeded = Math.floor(100 * Math.pow(S.level, 1.5));
+
     const hpGain = 100 + S.level * 15;
     const atkGain = 8 + (S.roleType === 3 ? 6 : 3);
     const defGain = 3 + (S.roleType === 2 ? 4 : 1);
+
     S.maxHp += hpGain;
-    S.hp = effMaxHp();
     S.atk += atkGain;
     S.def += defGain;
+
     if (allTalentsMaxed()) {
       S.breakthroughPoints = (S.breakthroughPoints || 0) + 1;
-      log(`★ 【等級提升】Lv.${S.level}！ HP+${hpGain} 攻擊+${atkGain} 防禦+${defGain} 突破點+1`,'win');
     } else {
       S.talentPoints++;
-      log(`★ 【等級提升】Lv.${S.level}！ HP+${hpGain} 攻擊+${atkGain} 防禦+${defGain} 天賦+1`,'win');
     }
-    if (S.level === 15)  log('🍇 已解鎖果實系統！','fruit-text');
-    if (S.level === 50)  log('🍇 抽果費用提升！','fruit-text');
-    if (S.level === 100) log('🍇 抽果費用再提升！','fruit-text');
-    checkAchievements();
+
+    // ★ 如果升超過 100 級，剩下的經驗直接用「批次計算」跳過，避免卡死
+    if (levelsGained >= 100) {
+      // 粗估剩下的等級（用經驗值反推）
+      let remainingExp = S.exp;
+      let estLevel = S.level;
+      // 每次跳 100 級估算
+      while (remainingExp >= Math.floor(100 * Math.pow(estLevel, 1.5))) {
+        remainingExp -= Math.floor(100 * Math.pow(estLevel, 1.5));
+        estLevel += 100; // 一次跳 100 級
+      }
+      
+      const jumpLevels = estLevel - S.level;
+      if (jumpLevels > 0) {
+        S.maxHp += jumpLevels * (100 + estLevel * 15);
+        S.atk += jumpLevels * atkGain;
+        S.def += jumpLevels * defGain;
+        S.level = estLevel;
+        S.exp = remainingExp;
+        S.expNeeded = Math.floor(100 * Math.pow(S.level, 1.5));
+        if (allTalentsMaxed()) S.breakthroughPoints += jumpLevels;
+        else S.talentPoints += jumpLevels;
+        levelsGained += jumpLevels;
+      }
+      break; // 跳出迴圈，不再一級一級算
+    }
   }
 
-  // BOSS 通關 → 回村
+  if (levelsGained > 0) {
+    S.hp = effMaxHp(); // 升級後補滿血
+    log(`★ 【等級提升】一口氣升了 ${levelsGained} 級！目前等級 Lv.${S.level}`, 'win');
+  }
+
+  // ==========================================
+  // 戰鬥後續處理
+  // ==========================================
   if (S.isBossFight && S.monster && S.monster.hp <= 0) {
     S.chapter++;
     log(`★ 第 ${S.chapter-1} 章通關！進入第 ${S.chapter} 章！`,'win');
@@ -690,25 +723,22 @@ function afterBattle() {
     return;
   }
 
-  // ★ 如果從 3D 來的，直接回去
+  // ★ 判斷：如果從 3D 來的，直接回去
   if (S.returnTo3D) {
     returnToTown();
     return;
   }
-  
-  // ★ 血量低於 30% → 自動回村
+
+  // ★ 血量過低，自動回村
   if (S.hp < effMaxHp() * 0.2) {
-    log(`⚠ 血量過低（${S.hp}/${effMaxHp()}），自動返回村莊。`, 'lose');
+    log(`⚠ 血量過低，自動返回村莊。`, 'lose');
     setTimeout(() => returnToTown(), 800);
     return;
   }
 
+  // 繼續下一場
   log(`⚔ 繼續探索下一場...`, 'system');
-  setTimeout(() => {
-    // ★ 這裡再確保一次按鈕解鎖
-    S.buttonLocked = false;
-    nextEncounter(); 
-  }, 800);  
+  setTimeout(() => nextEncounter(), 800);
 }
 
 function continueAdventure() {
