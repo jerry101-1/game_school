@@ -648,12 +648,13 @@ function applyLoot(l) {
 }
 
 function afterBattle() {
-  // ★ 保險：解鎖按鈕
-  S.buttonLocked = false;
-  showScreen('screen-battle');
+ S.buttonLocked = false;
+  
+  // ★ 確保戰鬥畫面有被正確顯示
+  showScreen('screen-battle'); 
+
   if (S.inAbyss) { setTimeout(() => abyssNextFloor(), 600); return; }
   if (S.dungeon.active) { setTimeout(() => dungeonNextFloor(), 600); return; }
-
   // 升級
   while (S.exp >= S.expNeeded) {
     S.exp -= S.expNeeded;
@@ -689,6 +690,12 @@ function afterBattle() {
     return;
   }
 
+  // ★ 如果從 3D 來的，直接回去
+  if (S.returnTo3D) {
+    returnToTown();
+    return;
+  }
+  
   // ★ 血量低於 30% → 自動回村
   if (S.hp < effMaxHp() * 0.2) {
     log(`⚠ 血量過低（${S.hp}/${effMaxHp()}），自動返回村莊。`, 'lose');
@@ -696,9 +703,12 @@ function afterBattle() {
     return;
   }
 
-  // ★ 沒有顯示返回按鈕，直接自動繼續下一場
-  log(`⚔ 繼續探索下一場...（血量 ${S.hp}/${effMaxHp()}）`, 'system');
-  setTimeout(() => nextEncounter(), 800);
+  log(`⚔ 繼續探索下一場...`, 'system');
+  setTimeout(() => {
+    // ★ 這裡再確保一次按鈕解鎖
+    S.buttonLocked = false;
+    nextEncounter(); 
+  }, 800);  
 }
 
 function continueAdventure() {
