@@ -597,9 +597,9 @@ function renderBreakthroughSection() {
         ✦ +1000
       </button>
       <button class="talent" style="background:#8e24aa;" ${canBreakMax?'':'disabled'} onclick="doBreakthroughMax()">
-        ✦✦ Max（單次上限 1 萬級）
+        ✦✦ Max
       </button>
-    </div>
+    </div>`;
 
   // 突破點兌換區
   if (bkPt >= 5) {
