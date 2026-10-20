@@ -29,7 +29,7 @@ function renderShop() {
   $('shopMoney').textContent = `（金幣：${S.money}）`;
   const items = [];
 
-  / ── 武器強化 ──
+  // ── 武器強化 ──
   items.push({
     name: '強化武器',
     desc: () => `Lv.${formatNumber(S.swordLevel)}（+${formatNumber(5 + S.swordLevel * 2)} 攻擊）`,
