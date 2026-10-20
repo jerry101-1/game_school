@@ -29,37 +29,30 @@ function renderShop() {
   $('shopMoney').textContent = `（金幣：${S.money}）`;
   const items = [];
 
-  // ── 武器強化 ──
+  / ── 武器強化 ──
   items.push({
     name: '強化武器',
-    desc: () => S.swordLevel === 0
-      ? `+5 攻擊力`
-      : `Lv.${formatNumber(S.swordLevel)} → Lv.${formatNumber(S.swordLevel+1)}（+${formatNumber(5 + S.swordLevel * 2)} 攻擊）`,
+    desc: () => `Lv.${formatNumber(S.swordLevel)}（+${formatNumber(5 + S.swordLevel * 2)} 攻擊）`,
     cost: () => S.swordLevel === 0 ? 50 : 50 + S.swordLevel * 30,
     maxCount: () => {
-      // 用公式直接算能買幾次（不跑迴圈）
+      // 用數學公式直接反推，無視上限
       let lv = S.swordLevel;
       if (lv === 0) return S.money >= 50 ? 1 : 0;
-      // 等差數列求和公式反推
       const a = 50 + lv * 30;
       const d = 30;
-      // a * n + n(n-1)/2 * d <= money
-      let n = Math.floor((-a + Math.sqrt(a*a + 2*d*S.money)) / d);
-      return Math.max(0, n);
+      return Math.max(0, Math.floor((-a + Math.sqrt(a*a + 2*d*S.money)) / d));
     },
     singleAction: () => {
       const cost = S.swordLevel === 0 ? 50 : 50 + S.swordLevel * 30;
-      const gain = S.swordLevel === 0 ? 5 : 5 + S.swordLevel * 2;
-      S.atk += gain; S.money -= cost; S.swordLevel++;
+      S.atk += 5 + S.swordLevel * 2; S.money -= cost; S.swordLevel++;
     },
     batchAction: (n) => {
-      let totalGain = 0;
-      for (let i = 0; i < n; i++) { // 這裡雖然有迴圈，但因為是使用者自己選的數量，不會像自動計算那樣卡死
-        const cost = S.swordLevel === 0 ? 50 : 50 + S.swordLevel * 30;
-        const gain = S.swordLevel === 0 ? 5 : 5 + S.swordLevel * 2;
-        S.atk += gain; S.money -= cost; S.swordLevel++;
-        totalGain += gain;
-      }
+      // 一次加完，不跑迴圈
+      const totalCost = n * (50 + S.swordLevel * 30) + 15 * n * (n - 1);
+      const totalGain = n * 5 + S.swordLevel * 2 * n + n * (n - 1);
+      S.money -= totalCost;
+      S.atk += totalGain;
+      S.swordLevel += n;
       return `武器強化 ${formatNumber(n)} 次！攻擊力共 +${formatNumber(totalGain)}`;
     },
     logClass: 'win',
@@ -68,31 +61,25 @@ function renderShop() {
   // ── 護甲強化 ──
   items.push({
     name: '強化護甲',
-    desc: () => S.shieldLevel === 0
-      ? `+3 防禦力`
-      : `Lv.${formatNumber(S.shieldLevel)} → Lv.${formatNumber(S.shieldLevel+1)}（+${formatNumber(3 + S.shieldLevel * 2)} 防禦）`,
+    desc: () => `Lv.${formatNumber(S.shieldLevel)}（+${formatNumber(3 + S.shieldLevel * 2)} 防禦）`,
     cost: () => S.shieldLevel === 0 ? 50 : 50 + S.shieldLevel * 30,
     maxCount: () => {
       let lv = S.shieldLevel;
       if (lv === 0) return S.money >= 50 ? 1 : 0;
       const a = 50 + lv * 30;
       const d = 30;
-      let n = Math.floor((-a + Math.sqrt(a*a + 2*d*S.money)) / d);
-      return Math.max(0, n);
+      return Math.max(0, Math.floor((-a + Math.sqrt(a*a + 2*d*S.money)) / d));
     },
     singleAction: () => {
       const cost = S.shieldLevel === 0 ? 50 : 50 + S.shieldLevel * 30;
-      const gain = S.shieldLevel === 0 ? 3 : 3 + S.shieldLevel * 2;
-      S.def += gain; S.money -= cost; S.shieldLevel++;
+      S.def += 3 + S.shieldLevel * 2; S.money -= cost; S.shieldLevel++;
     },
     batchAction: (n) => {
-      let totalGain = 0;
-      for (let i = 0; i < n; i++) {
-        const cost = S.shieldLevel === 0 ? 50 : 50 + S.shieldLevel * 30;
-        const gain = S.shieldLevel === 0 ? 3 : 3 + S.shieldLevel * 2;
-        S.def += gain; S.money -= cost; S.shieldLevel++;
-        totalGain += gain;
-      }
+      const totalCost = n * (50 + S.shieldLevel * 30) + 15 * n * (n - 1);
+      const totalGain = n * 3 + S.shieldLevel * 2 * n + n * (n - 1);
+      S.money -= totalCost;
+      S.def += totalGain;
+      S.shieldLevel += n;
       return `護甲強化 ${formatNumber(n)} 次！防禦力共 +${formatNumber(totalGain)}`;
     },
     logClass: 'win',
@@ -129,100 +116,66 @@ function renderShop() {
     logClass: 'win',
   });
 
-      // ── 惡魔契約（Lv.10+）──
-    if (S.level >= 10) {
-      items.push({
-        name: '簽訂惡魔契約',
-        desc: () => {
-          const sa = S.contractLevel === 0 ? 250 : 250 + S.contractLevel * 100;
-          const sl = S.contractLevel === 0 ? 100 : 100 + S.contractLevel * 50;
-          return `+${formatNumber(sa)} 攻擊 / -${formatNumber(sl)} 最大HP`;
-        },
-        cost: () => S.contractLevel === 0 ? 500 : 500 + S.contractLevel * 500,
-        maxCount: () => {
-          let lv = S.contractLevel;
-          // 估算用：大約能買幾級
-          let n = 0;
-          let testMoney = S.money;
-          let testHp = S.maxHp;
-          // 用極速跳躍估算，避免卡死
-          while (testMoney > 0 && testHp > 100) {
-            const c = lv === 0 ? 500 : 500 + lv * 500;
-            const loseHP = lv === 0 ? 100 : 100 + lv * 50;
-            if (testMoney < c || testHp - loseHP < 100) break;
-            testMoney -= c;
-            testHp -= loseHP;
-            lv++;
-            n++;
-            if (n > 100000) break; // 安全上限
-          }
-          return n;
-        },
-        singleAction: () => {
-          const cost = S.contractLevel === 0 ? 500 : 500 + S.contractLevel * 500;
-          const sa = S.contractLevel === 0 ? 250 : 250 + S.contractLevel * 100;
-          const sl = S.contractLevel === 0 ? 100 : 100 + S.contractLevel * 50;
-          if (S.maxHp - sl < 100) { log('⚠ 最大 HP 不足！', 'lose'); return; }
-          S.atk += sa; S.maxHp -= sl;
-          if (S.hp > effMaxHp()) S.hp = effMaxHp();
-          S.money -= cost; S.contractLevel++;
-        },
-        batchAction: (n) => {
-          let totalAtk = 0, actualCount = 0;
-          // 這裡雖然有迴圈，但因為 maxCount 已經算好上限，所以不會卡
-          for (let i = 0; i < n; i++) {
-            const cost = S.contractLevel === 0 ? 500 : 500 + S.contractLevel * 500;
-            const sa = S.contractLevel === 0 ? 250 : 250 + S.contractLevel * 100;
-            const sl = S.contractLevel === 0 ? 100 : 100 + S.contractLevel * 50;
-            if (S.maxHp - sl < 100) break;
-            S.atk += sa; S.maxHp -= sl;
-            S.money -= cost; S.contractLevel++;
-            totalAtk += sa; actualCount++;
-          }
-          if (S.hp > effMaxHp()) S.hp = effMaxHp();
-          return actualCount > 0 ? `簽訂 ${formatNumber(actualCount)} 層契約！攻擊共 +${formatNumber(totalAtk)}` : '';
-        },
-        logClass: 'skill-text',
-      });
+        // ── 惡魔契約 ──
+    items.push({
+      name: '簽訂惡魔契約',
+      desc: () => `+${formatNumber(250 + S.contractLevel * 100)} 攻擊 / -${formatNumber(100 + S.contractLevel * 50)} HP`,
+      cost: () => S.contractLevel === 0 ? 500 : 500 + S.contractLevel * 500,
+      maxCount: () => {
+        // 這裡因為 HP 有上限保護，我們就固定給 50000 次，直接算完
+        return Math.min(50000, Math.floor(S.money / (500 + S.contractLevel * 500)));
+      },
+      singleAction: () => {
+        S.atk += 250 + S.contractLevel * 100;
+        S.maxHp -= 100 + S.contractLevel * 50;
+        S.money -= 500 + S.contractLevel * 500;
+        S.contractLevel++;
+        if (S.maxHp < 100) S.maxHp = 100;
+        if (S.hp > effMaxHp()) S.hp = effMaxHp();
+      },
+      batchAction: (n) => {
+        let totalAtk = 0;
+        for (let i = 0; i < n; i++) {
+          S.atk += 250 + S.contractLevel * 100;
+          S.maxHp -= 100 + S.contractLevel * 50;
+          S.money -= 500 + S.contractLevel * 500;
+          S.contractLevel++;
+        }
+        if (S.maxHp < 100) S.maxHp = 100;
+        if (S.hp > effMaxHp()) S.hp = effMaxHp();
+        return `簽訂 ${formatNumber(n)} 層契約！`;
+      },
+      logClass: 'skill-text',
+    });
 
-          // ── 時空學習秘典 ──
-      items.push({
-        name: '時空學習秘典',
-        desc: () => `經驗 +${S.expShopLevel === 0 ? 20 : 15}%`,
-        cost: () => S.expShopLevel === 0 ? 600 : 600 + S.expShopLevel * 500,
-        maxCount: () => {
-          let lv = S.expShopLevel;
-          let money = S.money;
-          let n = 0;
-          // 極速估算
-          while (money > 0) {
-            const c = lv === 0 ? 600 : 600 + lv * 500;
-            if (money < c) break;
-            money -= c;
-            lv++;
-            n++;
-            if (n > 100000) break;
-          }
-          return n;
-        },
-        singleAction: () => {
-          const cost = S.expShopLevel === 0 ? 600 : 600 + S.expShopLevel * 500;
-          const eg = S.expShopLevel === 0 ? 20 : 15;
-          S.playexp += eg; S.money -= cost; S.expShopLevel++;
-        },
-        batchAction: (n) => {
-          let totalGain = 0;
-          for (let i = 0; i < n; i++) {
-            const cost = S.expShopLevel === 0 ? 600 : 600 + S.expShopLevel * 500;
-            const eg = S.expShopLevel === 0 ? 20 : 15;
-            S.playexp += eg; S.money -= cost; S.expShopLevel++;
-            totalGain += eg;
-          }
-          return `閱讀秘典 ${formatNumber(n)} 次！經驗加成 +${formatNumber(totalGain)}%`;
-        },
-        logClass: 'win',
-      });
-    }
+      // ── 時空學習秘典 ──
+    items.push({
+      name: '時空學習秘典',
+      desc: () => `經驗 +${S.expShopLevel === 0 ? 20 : 15}%`,
+      cost: () => S.expShopLevel === 0 ? 600 : 600 + S.expShopLevel * 500,
+      maxCount: () => {
+        // 等比數列，用數學公式一次算完
+        let lv = S.expShopLevel;
+        if (lv === 0) return S.money >= 600 ? 1 : 0;
+        return Math.max(0, Math.floor((Math.sqrt(500*500 + 4*500*(S.money + 600)) - 500) / 1000));
+      },
+      singleAction: () => {
+        const cost = S.expShopLevel === 0 ? 600 : 600 + S.expShopLevel * 500;
+        S.playexp += S.expShopLevel === 0 ? 20 : 15;
+        S.money -= cost; S.expShopLevel++;
+      },
+      batchAction: (n) => {
+        let totalGain = 0;
+        for (let i = 0; i < n; i++) {
+          S.playexp += S.expShopLevel === 0 ? 20 : 15;
+          S.money -= (S.expShopLevel === 0 ? 600 : 600 + S.expShopLevel * 500);
+          S.expShopLevel++;
+          totalGain += (S.expShopLevel === 0 ? 20 : 15);
+        }
+        return `閱讀秘典 ${formatNumber(n)} 次！經驗加成 +${formatNumber(totalGain)}%`;
+      },
+      logClass: 'win',
+    });
 
   // ── 隨機裝備 ──
   items.push({
