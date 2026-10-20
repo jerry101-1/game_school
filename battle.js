@@ -512,6 +512,8 @@ function autoDecide() {
 
 // ── 怪物擊敗 ──
 function onMonsterDefeated() {
+  if (typeof cleanupInventory === 'function') cleanupInventory();
+  
   const m = S.monster;
   S.inBattle = false;
   S.gameOver = true;
