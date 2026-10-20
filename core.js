@@ -210,42 +210,81 @@ function breakthroughCost() {
   return 500 * 50 + 100 * (lv - 49);
 }
 
-function doBreakthrough() {
+// ── 突破：升自訂數量 ──
+function doBreakthroughCustom(amount) {
   if (!allTalentsMaxed()) { log('需要先將所有天賦點滿！', 'lose'); return; }
-  if ((S.breakthroughPoints || 0) <= 0) { log('沒有突破點！', 'lose'); return; }
-  const cost = breakthroughCost();
-  if (S.money < cost) { log(`金幣不足！需要 ${cost.toLocaleString()} 金。`, 'lose'); return; }
-  S.money -= cost; S.breakthroughPoints--; S.breakthroughLevel++;
-  const ms = BREAKTHROUGH_MILESTONES[S.breakthroughLevel];
-  if (ms && !S.breakthroughMilestones[ms.key]) {
-    S.breakthroughMilestones[ms.key] = true;
-    log(`✦ 突破里程碑 Lv.${S.breakthroughLevel}：${ms.name}！`, 'win');
+  let bp = S.breakthroughPoints || 0;
+  if (bp <= 0) { log('沒有突破點！', 'lose'); return; }
+
+  let leveled = 0;
+  let spentBp = 0;
+  let spentGold = 0;
+
+  while (leveled < amount && bp > 0) {
+    const cost = breakthroughCost();
+    if (S.money < cost) break;
+    
+    S.money -= cost; bp--; S.breakthroughLevel++;
+    leveled++; spentBp++; spentGold += cost;
+    
+    const ms = BREAKTHROUGH_MILESTONES[S.breakthroughLevel];
+    if (ms && !S.breakthroughMilestones[ms.key]) {
+      S.breakthroughMilestones[ms.key] = true;
+      log(`✦ 突破里程碑 Lv.${S.breakthroughLevel}：${ms.name}！`, 'win');
+    }
+    if (leveled >= 50000) break; // 安全上限，避免網頁卡死
   }
-  log(`✦ 突破成功！突破等級 Lv.${S.breakthroughLevel}`, 'win');
+
+  S.breakthroughPoints = bp;
+  if (leveled === 0) { log(`⚠ 金幣不足！下一級需要 ${breakthroughCost().toLocaleString()} 金。`, 'lose'); return; }
+  
+  log(`✦ 一次突破 ${leveled} 級！花費 ${spentBp} 突破點 + ${formatNumber(spentGold)} 金幣`, 'win');
   renderTalent(); updateTownUI(); checkAchievements();
 }
 
+// ── 突破 Max（花光金幣與突破點）──
 function doBreakthroughMax() {
   if (!allTalentsMaxed()) { log('需要先將所有天賦點滿！', 'lose'); return; }
   let bp = S.breakthroughPoints || 0;
   if (bp <= 0) { log('沒有突破點！', 'lose'); return; }
-  let leveled = 0, spentBp = 0, spentGold = 0;
-  const milestonesUnlocked = [];
+
+  let leveled = 0;
+  let spentGold = 0;
+  let lv = S.breakthroughLevel || 0;
+
+  // 用數學公式直接算，不要一級一級跑迴圈
   while (bp > 0) {
-    const cost = breakthroughCost();
+    // 計算當前等級的突破花費
+    const cost = lv < 50 ? 500 * (lv + 1) : 500 * 50 + 100 * (lv - 49);
+    
+    // 如果金幣不夠，就停下來
     if (S.money < cost) break;
-    S.money -= cost; bp--; S.breakthroughLevel++; leveled++; spentBp++; spentGold += cost;
-    const ms = BREAKTHROUGH_MILESTONES[S.breakthroughLevel];
-    if (ms && !S.breakthroughMilestones[ms.key]) {
-      S.breakthroughMilestones[ms.key] = true;
-      milestonesUnlocked.push(`Lv.${S.breakthroughLevel} ${ms.name}（${ms.desc}）`);
+
+    // ★ 核心優化：如果金幣極多，一次算 1000 級
+    if (S.money > cost * 1000 && bp >= 1000) {
+      S.money -= cost * 1000;
+      bp -= 1000;
+      lv += 1000;
+      leveled += 1000;
+      spentGold += cost * 1000;
+    } else {
+      // 剩下的零頭一級一級算
+      S.money -= cost;
+      bp--;
+      lv++;
+      leveled++;
+      spentGold += cost;
     }
-    if (leveled > 10000) break;
   }
+
+  S.breakthroughLevel = lv;
   S.breakthroughPoints = bp;
+
   if (leveled === 0) { log(`⚠ 金幣不足！下一級需要 ${breakthroughCost().toLocaleString()} 金。`, 'lose'); return; }
-  log(`✦ 一次突破 ${leveled} 級！花費 ${spentBp} 突破點 + ${spentGold.toLocaleString()} 金幣`, 'win');
-  milestonesUnlocked.forEach(m => log(`✦ 解鎖里程碑：${m}`, 'win'));
+  
+  log(`✦ 瞬間突破 ${leveled.toLocaleString()} 級！花費 ${bp > 0 ? '全部' : ''} 突破點 + ${formatNumber(spentGold)} 金幣`, 'win');
+  if (bp > 0) log(`（金幣不足，剩餘突破點：${bp.toLocaleString()}）`, 'system');
+  
   renderTalent(); updateTownUI(); checkAchievements();
 }
 
