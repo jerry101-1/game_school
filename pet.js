@@ -24,13 +24,15 @@ function renderPet() {
     const p = PETS[S.activePet];
     const pet = S.pets[S.activePet];
     html += `<div class="pet-card active">
-      <div class="pet-name">${p.icon} ${p.name} Lv.${pet.level} <span class="badge pet">出戰中</span></div>
-      <div class="pet-lv">經驗：${pet.exp} / ${petExpNeeded(pet.level)}</div>
+      <div class="pet-name">${p.icon} ${p.name} Lv.${formatNumber(pet.level)} <span class="badge pet">出戰中</span></div>
+      <div class="pet-lv">經驗：${formatNumber(pet.exp)} / ${formatNumber(petExpNeeded(pet.level))}</div>
       <div class="pet-skill">技能：${p.skill.name}｜${p.skill.desc}</div>
       <div class="pet-skill">被動：${p.passive.name}｜${p.passive.desc}</div>
-      <div class="subtitle" style="margin-top:4px;">攻擊：${getPetAtk()}｜HP：${getPetHp()}</div>
-      <div style="margin-top:8px;">
+      <div class="subtitle" style="margin-top:4px;">攻擊：${formatNumber(getPetAtk())}｜HP：${formatNumber(getPetHp())}</div>
+      
+      <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;">
         <button class="gold small" onclick="unequipPet()">收回</button>
+        <button class="potion small" onclick="buyPetLevel()">💰 花金幣升級</button>
       </div>
     </div>`;
   }
@@ -63,18 +65,38 @@ function renderPet() {
   c.innerHTML = html;
 }
 
-function petExpNeeded(lv) { return Math.floor(100 * Math.pow(lv, 1.4)); }
+// 寵物升級所需經驗（稍微調低，讓後期好升一點）
+function petExpNeeded(lv) { 
+  return Math.floor(100 * Math.pow(lv, 1.3)); 
+}
+
+// 獲得寵物經驗
 function gainPetExp(baseExp) {
   if (!S.activePet || !S.pets[S.activePet]) return;
   const pet = S.pets[S.activePet];
   const p = PETS[S.activePet];
-  pet.exp += baseExp;
+  
+  // ★ 後期優化：寵物吸收的經驗會隨著主人等級放大
+  const finalExp = Math.floor(baseExp * (1 + S.level * 0.1));
+  
+  pet.exp += finalExp;
+  
+  let leveled = false;
   while (pet.exp >= petExpNeeded(pet.level)) {
     pet.exp -= petExpNeeded(pet.level);
     pet.level++;
-    log(`🐾 ${p.name} 升到 Lv.${pet.level}！`, 'pet-text');
+    leveled = true;
+    // 每升 100 級提示一次，避免洗頻
+    if (pet.level % 100 === 0) {
+      log(`🐾 ${p.name} 升到了 Lv.${formatNumber(pet.level)}！`, 'pet-text');
+    }
+  }
+  
+  if (leveled && pet.level < 100) {
+    log(`🐾 ${p.name} 升到了 Lv.${pet.level}！`, 'pet-text');
   }
 }
+
 function pickPet() {
   const total = PET_POOL.reduce((s,p)=>s+p.weight,0);
   let r = Math.random() * total;
@@ -107,13 +129,25 @@ function getPetAtk() {
   if (!S.activePet || !S.pets[S.activePet]) return 0;
   const p = PETS[S.activePet];
   const pet = S.pets[S.activePet];
-  return Math.floor(p.baseAtk * (1 + (pet.level - 1) * 0.2));
+  const baseAtk = p.baseAtk * (1 + (pet.level - 1) * 0.2);
+  
+  // ★ 寵物攻擊力 = 基礎 * 主人的轉生攻擊加成 * 主人的突破攻擊加成
+  const rebirthMult = 1 + (S.rebirthBonusAtk || 0) / 100;
+  const breakMult = 1 + (S.breakthroughLevel * 2) / 100;
+  
+  return Math.floor(baseAtk * rebirthMult * breakMult);
 }
+
 function getPetHp() {
   if (!S.activePet || !S.pets[S.activePet]) return 0;
   const p = PETS[S.activePet];
   const pet = S.pets[S.activePet];
-  return Math.floor(p.baseHp * (1 + (pet.level - 1) * 0.2));
+  const baseHp = p.baseHp * (1 + (pet.level - 1) * 0.2);
+  
+  const rebirthMult = 1 + (S.rebirthBonusHp || 0) / 100;
+  const breakMult = 1 + (S.breakthroughLevel * 2) / 100;
+  
+  return Math.floor(baseHp * rebirthMult * breakMult);
 }
 
 // 戰鬥中寵物自動攻擊（每回合 30% 機率觸發）
@@ -158,3 +192,24 @@ function renderPetBattleBar() {
 }
 
 // 在怪物回合前插入寵物攻擊（由 battle.js 呼叫）
+
+// ── 花金幣直接幫寵物升級（後期專屬）──
+function buyPetLevel() {
+  if (!S.activePet || !S.pets[S.activePet]) return;
+  const pet = S.pets[S.activePet];
+  const p = PETS[S.activePet];
+  
+  // 每次花費 = 寵物當前等級 * 10000 金幣
+  const cost = pet.level * 10000;
+  if (S.money < cost) { log(`金幣不足！升級需要 ${formatNumber(cost)} 金幣。`, 'lose'); return; }
+
+  S.money -= cost;
+  
+  // 隨機升 10 ~ 50 級
+  const gainLv = rand(10, 50);
+  pet.level += gainLv;
+  
+  log(`🐾 消耗 ${formatNumber(cost)} 金幣，${p.name} 直接升了 ${gainLv} 級！(目前 Lv.${formatNumber(pet.level)})`, 'pet-text');
+  renderPet();
+  updateTownUI();
+}
