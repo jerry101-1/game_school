@@ -109,13 +109,17 @@ function elemName(e) { return {1:'火',2:'冰',3:'雷',4:'物理'}[e] || '無'; 
 // ── 數字格式化 ──
 function formatNumber(num) {
   if (num === undefined || num === null || isNaN(num)) return '0';
-  if (num < 1000) return Math.floor(num).toString();
+  if (num < 10000) return Math.floor(num).toString();
+  
   const units = ['', '萬', '億', '兆', '京', '垓', '秭', '穰', '溝', '澗', '正', '載'];
-  // 因為中文是「萬進位」，所以除以 10000 取對數
   const order = Math.floor(Math.log10(num) / 4); 
+  
   if (order >= units.length) return num.toExponential(2);
+  
   const unit = units[order];
-  const scaled = num / Math.pow(1000, order);
+  const scaled = num / Math.pow(10000, order);
+  
+  // ★ 限制最多顯示小數點後兩位，且去除多餘的 0
   return scaled.toFixed(2).replace(/\.00$/, '') + unit;
 }
 
