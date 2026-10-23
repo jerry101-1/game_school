@@ -19,6 +19,15 @@ function renderPatchNotes() {
   // ★ 在這裡維護你的更新紀錄
   const notes = [
     {
+      version: 'v1.5.3',
+      date: '2026-10-22',
+      color: '#d7b6ad',
+      changes; [
+        '📈 排行榜數值優化：改以用中文顯示',
+        '🔄 寵物及玩家升級優化：避免一次飛升太多級導致網頁死機',
+      ]
+    },
+    {
       version: 'v1.5.2',
       date: '2026-10-20',
       color: '#4fc6b2',
