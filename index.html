@@ -84,9 +84,13 @@
         <span class="tb-name">排行榜</span>
         <span class="tb-sub">最佳紀錄</span>
       </button>
+      <button class="town-btn" onclick="openRealm()" style="background:linear-gradient(135deg,#4a148c,#7b1fa2); border-color:#ce93d8;">
+        <span class="tb-icon">☯️</span>
+        <span class="tb-name">境界</span>
+        <span class="tb-sub">修仙之路</span>
+      </button>
     </div>
   </div>
-
   <div class="town-section">
     <div class="town-grid-sm">
       <button class="town-cat cat-train" onclick="openTrainMenu()">
@@ -397,6 +401,14 @@
   <div id="log"></div>
 </div>
 
+<div id="screen-realm" class="panel hidden">
+  <div class="panel-title">☯️ 境界與飛升</div>
+  <div id="realmContent"></div>
+  <div class="actions" style="margin-top:10px;">
+    <button onclick="backToTown()">返回村莊</button>
+  </div>
+</div>
+  
 <script src="data.js"></script>
 <script src="core.js"></script>
 <script src="battle.js"></script>
@@ -415,5 +427,6 @@
 <!-- ★ 3D 載入區 (直接使用 CDN 全域變數) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="3dworld.js"></script>
+<script src="realm.js"></script>
 </body>
 </html>
