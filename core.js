@@ -62,6 +62,8 @@ const S = {
   rebirthBonusGold: 0,   
   // ★ 飛升系統
   ascendPoints: 0,
+  ascendAtkBonus: 0,
+  ascendDropBonus: 0,
 };
 
 // ── DOM 工具 ──
@@ -189,7 +191,9 @@ function getPetBonus() {
 function effAtk() {
   const t = getTalentBonus(), b = getBreakthroughBonus(), g = getGuildBonus(), p = getPetBonus();
   const base = S.atk * (1 + (t.atkPct + b.atkPct + g.atkPct + p.atkPct)/100);
-  return Math.floor(base * (1 + (S.rebirthBonusAtk || 0) / 100));
+  const rebirthMult = 1 + (S.rebirthBonusAtk || 0) / 100;
+  const ascendMult = 1 + (S.ascendAtkBonus || 0); // ★ 仙緣加成：每級 +100% (即乘 2)
+  return Math.floor(base * rebirthMult * ascendMult);
 }
 function effDef() {
   const t = getTalentBonus(), b = getBreakthroughBonus();
@@ -198,7 +202,9 @@ function effDef() {
 function effMaxHp() {
   const t = getTalentBonus(), b = getBreakthroughBonus();
   const base = S.maxHp * (1 + (t.hpPct + b.hpPct)/100);
-  return Math.max(1, Math.floor(base * (1 + (S.rebirthBonusHp || 0) / 100)));
+  const rebirthMult = 1 + (S.rebirthBonusHp || 0) / 100;
+  const ascendMult = 1 + (S.ascendAtkBonus || 0); // ★ 仙緣加成
+  return Math.max(1, Math.floor(base * rebirthMult * ascendMult));
 }
 function effDodge()    { return S.playerDodge + getTalentBonus().dodge; }
 function effCritRate() {
