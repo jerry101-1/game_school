@@ -148,35 +148,66 @@ function renderShop() {
       logClass: 'skill-text',
     });
 
-      // ── 時空學習秘典 ──
-    items.push({
-      name: '時空學習秘典',
-      desc: () => `經驗 +${S.expShopLevel === 0 ? 20 : 15}%`,
-      cost: () => S.expShopLevel === 0 ? 600 : 600 + S.expShopLevel * 500,
-      maxCount: () => {
-        // 等比數列，用數學公式一次算完
-        let lv = S.expShopLevel;
-        if (lv === 0) return S.money >= 600 ? 1 : 0;
-        return Math.max(0, Math.floor((Math.sqrt(500*500 + 4*500*(S.money + 600)) - 500) / 1000));
-      },
-      singleAction: () => {
-        const cost = S.expShopLevel === 0 ? 600 : 600 + S.expShopLevel * 500;
-        S.playexp += S.expShopLevel === 0 ? 20 : 15;
-        S.money -= cost; S.expShopLevel++;
-      },
-      batchAction: (n) => {
-        let totalGain = 0;
-        for (let i = 0; i < n; i++) {
-          S.playexp += S.expShopLevel === 0 ? 20 : 15;
-          S.money -= (S.expShopLevel === 0 ? 600 : 600 + S.expShopLevel * 500);
-          S.expShopLevel++;
-          totalGain += (S.expShopLevel === 0 ? 20 : 15);
-        }
-        return `閱讀秘典 ${formatNumber(n)} 次！經驗加成 +${formatNumber(totalGain)}%`;
-      },
-      logClass: 'win',
-    });
-
+          // ── 時空學習秘典 ──
+      items.push({
+        name: '時空學習秘典',
+        desc: () => `經驗 +${S.expShopLevel === 0 ? 20 : 15}%`,
+        cost: () => S.expShopLevel === 0 ? 600 : 600 + S.expShopLevel * 500,
+        maxCount: () => {
+          // 如果金幣多到爆炸，直接給 50000 次的保底上限
+          if (S.money > 1e15) return 50000;
+          
+          let lv = S.expShopLevel;
+          let money = S.money;
+          
+          // 第一級的特例
+          if (lv === 0) {
+            if (money >= 600) { money -= 600; lv = 1; } 
+            else return 0;
+          }
+          
+          // ★ 用等差數列公式直接反推：(首項 + 末項) * 項數 / 2 <= 剩餘金幣
+          // 首項 a = 600 + lv * 500, 公差 d = 500
+          const a = 600 + lv * 500;
+          const d = 500;
+          
+          // 解一元二次方程式： n*a + n*(n-1)*d/2 <= money
+          let n = Math.floor((-a + Math.sqrt(a*a + 2*d*money)) / d);
+          
+          // 加上前面特例買的那 1 級
+          let totalBought = n + (S.expShopLevel === 0 ? 1 : 0);
+          
+          // 安全上限，防止買到超過 10 萬次
+          return Math.min(Math.max(0, totalBought), 100000);
+        },
+        singleAction: () => {
+          const cost = S.expShopLevel === 0 ? 600 : 600 + S.expShopLevel * 500;
+          const eg = S.expShopLevel === 0 ? 20 : 15;
+          S.playexp += eg; S.money -= cost; S.expShopLevel++;
+        },
+         batchAction: (n) => {
+          let totalGain = 0;
+          let currentLv = S.expShopLevel;
+          
+          // ★ 用公式直接算總加成，不跑迴圈
+          for (let i = 0; i < n; i++) {
+            const eg = currentLv === 0 ? 20 : 15;
+            totalGain += eg;
+            
+            // 這裡只算錢，不跑迴圈（錢已經在 maxCount 算過了，這裡只是扣款）
+            const cost = currentLv === 0 ? 600 : 600 + currentLv * 500;
+            S.money -= cost;
+            currentLv++;
+          }
+          S.expShopLevel = currentLv;
+          S.playexp += totalGain;
+          
+          return `閱讀秘典 ${formatNumber(n)} 次！經驗加成 +${formatNumber(totalGain)}%`;
+        },
+          return `閱讀秘典 ${formatNumber(n)} 次！經驗加成 +${formatNumber(totalGain)}%`;
+        },
+        logClass: 'win',
+      });
   // ── 隨機裝備 ──
   items.push({
     name: '🛒 購買隨機裝備',
