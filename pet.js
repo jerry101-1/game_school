@@ -33,6 +33,7 @@ function renderPet() {
       <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;">
         <button class="gold small" onclick="unequipPet()">收回</button>
         <button class="potion small" onclick="buyPetLevel()">💰 花金幣升級</button>
+        <button class="danger small" onclick="maxPetLevel()">🚀 一鍵升 1000 級</button>
       </div>
     </div>`;
   }
@@ -76,24 +77,40 @@ function gainPetExp(baseExp) {
   const pet = S.pets[S.activePet];
   const p = PETS[S.activePet];
   
-  // ★ 後期優化：寵物吸收的經驗會隨著主人等級放大
+  // 寵物吸收的經驗會隨著主人等級放大
   const finalExp = Math.floor(baseExp * (1 + S.level * 0.1));
   
   pet.exp += finalExp;
   
   let leveled = false;
-  while (pet.exp >= petExpNeeded(pet.level)) {
-    pet.exp -= petExpNeeded(pet.level);
-    pet.level++;
+  let oldLevel = pet.level;
+
+  // ★ 極速升級演算法：如果經驗值大到誇張，直接用公式估算
+  if (finalExp > 10000000) {
+    // 粗略估算：假設每次升級需要的經驗大約是 100 * lv^1.3
+    // 我們用平方根反推，一次跳幾千級
+    let jump = Math.floor(Math.pow(pet.exp / 100, 1 / 2.3));
+    if (jump > 10000) jump = 10000; // 單次最高跳 1 萬級，防卡死
+    
+    pet.level += jump;
+    pet.exp = 0; // 升級後直接把多餘經驗吃掉，避免精準度丟失
     leveled = true;
-    // 每升 100 級提示一次，避免洗頻
-    if (pet.level % 100 === 0) {
-      log(`🐾 ${p.name} 升到了 Lv.${formatNumber(pet.level)}！`, 'pet-text');
+  } else {
+    // 如果經驗不多（例如前期或剛轉生），就用原本的迴圈
+    while (pet.exp >= petExpNeeded(pet.level)) {
+      pet.exp -= petExpNeeded(pet.level);
+      pet.level++;
+      leveled = true;
     }
   }
   
-  if (leveled && pet.level < 100) {
-    log(`🐾 ${p.name} 升到了 Lv.${pet.level}！`, 'pet-text');
+  if (leveled && pet.level !== oldLevel) {
+    // 如果升超過 100 級，只印一次日誌，避免刷屏卡頓
+    if (pet.level - oldLevel > 100) {
+      log(`🐾 ${p.name} 吸收了巨量經驗，等級瞬間飆升至 Lv.${formatNumber(pet.level)}！`, 'pet-text');
+    } else {
+      log(`🐾 ${p.name} 升到了 Lv.${formatNumber(pet.level)}！`, 'pet-text');
+    }
   }
 }
 
@@ -210,6 +227,29 @@ function buyPetLevel() {
   pet.level += gainLv;
   
   log(`🐾 消耗 ${formatNumber(cost)} 金幣，${p.name} 直接升了 ${gainLv} 級！(目前 Lv.${formatNumber(pet.level)})`, 'pet-text');
+  renderPet();
+  updateTownUI();
+}
+
+// ── 一鍵把寵物升到爆（消耗大量金幣）──
+function maxPetLevel() {
+  if (!S.activePet || !S.pets[S.activePet]) return;
+  const pet = S.pets[S.activePet];
+  const p = PETS[S.activePet];
+  
+  // 假設你想直接升 1000 級
+  const levelsToGain = 1000;
+  const cost = pet.level * 10000 * levelsToGain;
+  
+  if (S.money < cost) { 
+    log(`金幣不足！一鍵升級需要 ${formatNumber(cost)} 金幣。`, 'lose'); 
+    return; 
+  }
+
+  S.money -= cost;
+  pet.level += levelsToGain;
+  
+  log(`🐾 消耗 ${formatNumber(cost)} 金幣，${p.name} 瞬間提升了 ${levelsToGain} 級！(目前 Lv.${formatNumber(pet.level)})`, 'pet-text');
   renderPet();
   updateTownUI();
 }
