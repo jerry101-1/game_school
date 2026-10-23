@@ -60,6 +60,8 @@ const S = {
   rebirthBonusHp: 0,     
   rebirthBonusExp: 0,    
   rebirthBonusGold: 0,   
+  // ★ 飛升系統
+  ascendPoints: 0,
 };
 
 // ── DOM 工具 ──
@@ -90,7 +92,7 @@ function showScreen(name) {
    'screen-adventure','screen-battle','screen-job','screen-forge',
    'screen-dungeon','screen-guild','screen-pet','screen-cloud',
    'screen-train','screen-collect','screen-system','screen-gamble',
-   'screen-leaderboard', 'screen-rebirth', 'screen-patch']
+   'screen-leaderboard', 'screen-rebirth', 'screen-patch','screen-realm']
     .forEach(s => { 
       const el = document.getElementById(s); 
       if (el) el.classList.add('hidden'); 
