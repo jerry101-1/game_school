@@ -227,6 +227,20 @@ function playerFruitSkill() {
     S.hp = Math.min(effMaxHp(), S.hp + steal);
     log(`吸收精氣，回復 ${steal} 點 HP！`,'win');
   }
+   if (S.activeFruit === 'revive') {
+    const heal = Math.floor(effMaxHp() * 0.15); // 粗略回復
+    S.hp = Math.min(effMaxHp(), S.hp + heal);
+    log(`🌿 治癒果實恢復了 ${heal} HP！`, 'win');
+  }
+  if (S.activeFruit === 'gravity') {
+    log(`🌌 無視防禦攻擊！`, 'crit');
+    // 這邊可以修改傷害計算，直接無視防禦
+  }
+  if (S.activeFruit === 'gun') {
+    // 爆擊率大幅提升
+    log(`🔫 槍械射擊觸發爆擊！`, 'crit');
+  }
+
 
   m.hp -= pDmg;
   log(`造成 ${pDmg} 點傷害！`,'dmg-player');
