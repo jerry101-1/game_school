@@ -165,12 +165,24 @@ function getBreakthroughBonus() {
 
 function getGuildBonus() {
   if (!S.guild.id) return {atkPct:0,crit:0,critDmg:0,exp:0,gold:0};
+  
   const g = GUILDS[S.guild.id];
-  if (!g) return {atkPct:0,crit:0,critDmg:0,exp:0,gold:0};
-  return {
-    atkPct: g.bonus.atkPct || 0, crit: g.bonus.crit || 0,
-    critDmg:g.bonus.critDmg || 0, exp: g.bonus.exp || 0, gold: g.bonus.gold || 0,
+  const b = {
+    atkPct: g?.bonus?.atkPct || 0,
+    crit: g?.bonus?.crit || 0,
+    critDmg: g?.bonus?.critDmg || 0,
+    exp: g?.bonus?.exp || 0,
+    gold: g?.bonus?.gold || 0,
   };
+
+  // ★ 加上公會技能樹的加成
+  if (S.guildSkills) {
+    if (S.guildSkills.atkBoost)  b.atkPct += S.guildSkills.atkBoost * 10;
+    if (S.guildSkills.hpBoost)   b.hpPct = (b.hpPct || 0) + S.guildSkills.hpBoost * 10; // 需在 effMaxHp 處理
+    if (S.guildSkills.expBoost)  b.exp += S.guildSkills.expBoost * 20;
+    if (S.guildSkills.luckBoost) b.gold += S.guildSkills.luckBoost * 15;
+  }
+  return b;
 }
 
 function getPetBonus() {
