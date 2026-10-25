@@ -178,6 +178,32 @@ const FRUITS = {
             {lv:15,name:"虛空吞噬",cd:3,mult:2.8,desc:"吞噬空間，造成280%傷害"},
             {lv:50,name:"虛空風暴",cd:4,mult:4.5,desc:"虛空風暴，造成450%傷害"},
             {lv:100,name:"虛空寂滅",cd:6,mult:8.0,desc:"寂滅一切，造成800%傷害無視100%防禦"}]},
+    // ── 新增果實 ──
+  gravity: {name:"重力果實",icon:"🌌",rarity:"神話",element:4,desc:"操控重力，造成無視防禦的巨額真實傷害",
+    skills:[{lv:1,name:"重力球",cd:2,mult:2.0,desc:"壓縮重力球，造成200%無視防禦傷害"},
+            {lv:15,name:"重力場",cd:3,mult:3.0,desc:"展開重力場，造成300%傷害並降低怪物閃避"},
+            {lv:50,name:"隕石召喚",cd:4,mult:5.0,desc:"召喚隕石，造成500%無視防禦傷害"},
+            {lv:100,name:"黑洞",cd:6,mult:8.5,desc:"製造微型黑洞，造成850%無視防禦傷害並吸血50%"}]},
+  time: {name:"時間果實",icon:"⏳",rarity:"神話",element:3,desc:"操控時間，大幅縮短技能冷卻",
+    skills:[{lv:1,name:"時光刃",cd:1,mult:1.5,desc:"時間斬擊，造成150%傷害(CD極短)"},
+            {lv:15,name:"時光倒流",cd:2,mult:2.0,desc:"倒流時間，造成200%傷害並回復自身20%HP"},
+            {lv:50,name:"時間暫停",cd:3,mult:3.0,desc:"暫停時間，造成300%傷害並讓怪物暈眩2回合"},
+            {lv:100,name:"永恆審判",cd:4,mult:7.0,desc:"時間長河的審判，造成700%傷害(CD僅4回合)"}]},
+  revive: {name:"治癒果實",icon:"🌿",rarity:"史詩",element:4,desc:"生命的力量，提供極致的續航",
+    skills:[{lv:1,name:"治愈之光",cd:2,mult:1.2,desc:"造成120%傷害並回復最大HP的10%"},
+            {lv:15,name:"生命汲取",cd:3,mult:2.0,desc:"造成200%傷害並回復最大HP的20%"},
+            {lv:50,name:"自然復甦",cd:4,mult:3.0,desc:"造成300%傷害並回復最大HP的35%"},
+            {lv:100,name:"萬物生機",cd:5,mult:5.0,desc:"造成500%傷害並直接回滿自身HP"}]},
+  gun: {name:"槍械果實",icon:"🔫",rarity:"稀有",element:4,desc:"現代兵器，附帶高機率爆擊",
+    skills:[{lv:1,name:"手槍射擊",cd:1,mult:1.8,desc:"造成180%傷害，爆擊率+20%"},
+            {lv:15,name:"散彈爆發",cd:2,mult:2.5,desc:"造成250%傷害，爆擊率+30%"},
+            {lv:50,name:"狙擊步槍",cd:4,mult:3.5,desc:"造成350%傷害，必定爆擊"},
+            {lv:100,name:"殲滅轟炸",cd:6,mult:6.0,desc:"造成600%傷害，必定爆擊且無視30%防禦"}]},
+  plant: {name:"植物果實",icon:"🌱",rarity:"普通",element:4,desc:"自然之力，附加中毒效果",
+    skills:[{lv:1,name:"藤蔓抽打",cd:2,mult:1.5,desc:"造成150%傷害並附加中毒"},
+            {lv:15,name:"毒花粉",cd:3,mult:2.0,desc:"造成200%傷害並附加劇毒"},
+            {lv:50,name:"食人花",cd:4,mult:3.0,desc:"造成300%傷害並吸血30%"},
+            {lv:100,name:"世界樹之怒",cd:6,mult:5.5,desc:"造成550%傷害並附加毀滅性毒傷"}]},
 };
 
 const FRUIT_POOL = [
@@ -276,6 +302,19 @@ const PETS = {
     baseAtk:80, baseHp:200,
     skill:{name:"聖獸一擊", mult:4.0, effect:"all", desc:"400% 攻擊 + 全屬性效果"},
     passive:{name:"神佑", desc:"全屬性 +20%"}},
+  // ── 新增寵物 ──
+  angel: {name:"小天使", icon:"👼", rarity:"神話", desc:"來自天堂的守護者",
+    baseAtk:60, baseHp:150,
+    skill:{name:"聖光洗禮", mult:3.5, effect:"regen", desc:"降下聖光，350% 傷害並恢復主人生命"},
+    passive:{name:"神聖守護", desc:"主人受到的傷害減少 10%"}},
+  reaper: {name:"死神", icon:"💀", rarity:"傳說", desc:"收割靈魂的使者",
+    baseAtk:70, baseHp:90,
+    skill:{name:"死亡鐮刀", mult:4.0, effect:"lifesteal", desc:"揮舞鐮刀，400% 傷害並吸取大量生命"},
+    passive:{name:"靈魂收割", desc:"主人的暴擊率增加 15%"}},
+  cyborg: {name:"機械戰犬", icon:"🐕", rarity:"史詩", desc:"高科技改造的戰鬥犬",
+    baseAtk:40, baseHp:120,
+    skill:{name:"雷射光束", mult:3.0, effect:"none", desc:"發射雷射，造成 300% 無視防禦傷害"},
+    passive:{name:"火控系統", desc:"主人的攻擊力增加 10%"}},
 };
 
 const PET_POOL = [
