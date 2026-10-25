@@ -66,7 +66,7 @@ function renderPet() {
   c.innerHTML = html;
 }
 
-// 寵物升級所需經驗（稍微調低，讓後期好升一點）
+// 寵物升級所需經驗
 function petExpNeeded(lv) { 
   return Math.floor(100 * Math.pow(lv, 1.3)); 
 }
@@ -77,31 +77,40 @@ function gainPetExp(baseExp) {
   const pet = S.pets[S.activePet];
   const p = PETS[S.activePet];
 
+  // 寵物吸收的經驗會隨著主人等級放大
   const finalExp = Math.floor(baseExp * (1 + S.level * 0.1));
+  
   pet.exp += finalExp;
   let oldLevel = pet.level;
 
-  // ★ 極速升級：用二分搜尋找「最高可達等級」，避免公式低估
+  // ★ 極速升級演算法：如果經驗值大到誇張，直接用二分搜尋估算
   if (finalExp > 10000000) {
-    const targetExp = pet.exp;
-    let lo = pet.level, hi = pet.level + 100000;   // 上限 10 萬級
+    let targetExp = pet.exp; // 目前的總經驗
+    let lo = pet.level, hi = pet.level + 100000; // 上限 10 萬級
+    
+    // 計算從 1 級升到 lv 級總共需要的經驗（近似積分）
     const totalTo = lv => {
-      // 累積到 lv 的總經驗（近似積分 100 * lv^1.3）
       return Math.floor(100 * Math.pow(lv, 2.3) / 2.3);
     };
+    
     while (lo < hi) {
       const mid = Math.floor((lo + hi + 1) / 2);
-      if (totalTo(mid) <= targetExp) lo = mid; else hi = mid - 1;
+      if (totalTo(mid) <= targetExp) lo = mid; 
+      else hi = mid - 1;
     }
+    
     pet.level = lo;
+    // 把剩餘經驗存回去
     pet.exp = Math.max(0, targetExp - totalTo(lo));
   } else {
+    // 正常升級迴圈（前期用）
     while (pet.exp >= petExpNeeded(pet.level)) {
       pet.exp -= petExpNeeded(pet.level);
       pet.level++;
     }
   }
 
+  // 如果有升級，印出日誌
   if (pet.level !== oldLevel) {
     if (pet.level - oldLevel > 100) {
       log(`🐾 ${p.name} 吸收了巨量經驗，等級瞬間飆升至 Lv.${formatNumber(pet.level)}！`, 'pet-text');
