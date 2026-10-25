@@ -168,12 +168,14 @@ async function openCloudLeaderboard() {
     ☁ 正在載入雲端排行榜...
   </div>`;
 
-  const cloud = await downloadLeaderboard();
-  if (!cloud || !cloud.leaderboard) {
+    let cloud = await downloadLeaderboard();
+  
+  // 如果下載失敗（例如 Worker 死當或斷網）
+  if (!cloud) {
     c.innerHTML = `
       <div class="subtitle" style="text-align:center;padding:20px;color:#f44336;">
-        ⚠️ 無法載入雲端排行榜<br>
-        <span style="font-size:11px;">請確認 Worker 已部署，且 cloud.js 的 WORKER_URL 已設定正確</span>
+        ⚠️ 無法連線至雲端伺服器<br>
+        <span style="font-size:11px;">請確認網路連線，或稍後再試。</span>
       </div>
       <div class="actions" style="margin-top:10px;">
         <button onclick="renderLeaderboard()">回本地排行榜</button>
@@ -183,6 +185,11 @@ async function openCloudLeaderboard() {
     return;
   }
 
+  // ★ 如果雲端是空的（剛建立的 Gist），自動初始化格式
+  if (!cloud.leaderboard) {
+    cloud = { leaderboard: {}, players: {} };
+  }
+  
   const CATEGORIES = {
     level:     { name: '最高等級',   icon: '⭐', format: v => `Lv.${formatNumber(v)}` },
     atk:       { name: '最高攻擊力', icon: '⚔️', format: v => formatNumber(v) },
