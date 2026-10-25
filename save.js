@@ -1,5 +1,5 @@
 // ============================================================
-//  ★ 存讀檔 — 本地 + 跨電腦（Base64 分享碼/rpg2）
+//  ★ 存讀檔 — 本地 + 跨電腦（Base64 分享碼 / RPG2）
 // ============================================================
 
 const SAVE_KEY = 'rpg_save_v6';
@@ -11,7 +11,7 @@ function saveToCloud() {
 
 function saveGame() {
   try {
-    const save = {...S, monster:null, inBattle:false, gameOver:false};
+    const save = {...S, monster:null, inBattle:false, gameOver:false, returnTo3D:false};
     localStorage.setItem(SAVE_KEY, JSON.stringify(save));
     log('【系統】遊戲已存檔。', 'system');
   } catch(e) { log('【系統】存檔失敗。', 'lose'); }
@@ -36,13 +36,13 @@ function loadGame() {
       if (S.roleLevel === undefined) S.roleLevel = 1;
       if (S.roleExp === undefined) S.roleExp = 0;
       if (!S.roleLevels) S.roleLevels = { [S.roleType]: S.roleLevel };
-      if (!S.dungeon) S.dungeon = { active:null, floor:0 };
+      if (!S.dungeon) S.dungeon = { active:null, floor:0, cleared:0 };
       if (!S.guild) S.guild = { id:null, contrib:0, questProgress:{}, questClaimed:{} };
       if (!S.pets) S.pets = {};
       if (S.activePet === undefined) S.activePet = null;
-      if (!S.dungeon) S.dungeon = { active:null, floor:0, cleared:0 };
       if (S.dungeon.cleared === undefined) S.dungeon.cleared = 0;
       if (!S.gambleLog) S.gambleLog = [];
+      if (S.returnTo3D === undefined) S.returnTo3D = false;
       // 清空戰鬥暫存
       S.monster = null; S.inBattle = false; S.gameOver = false;
       S.inAbyss = false; S.abyssFloor = 0; S.buttonLocked = false;
@@ -80,44 +80,44 @@ function renderCloud() {
   `;
 }
 
-// ── 裝備精簡：匯出時把裝備轉成短格式 ──
+// ── 裝備壓縮：保留名稱與 label ──
 function compressItem(item) {
   if (!item) return null;
   return {
+    n: item.name,                                        // ★ 保留名稱
     r: item.rarity,
     l: item.level,
     s: item.slot,
-    a: item.affixes.map(x => [x.stat, x.val]),
+    a: item.affixes.map(x => [x.stat, x.val, x.label]),  // ★ 保留 label
   };
 }
 
-// ── 裝備還原 ──
 function decompressItem(short) {
   if (!short) return null;
-  const item = genEquipment(short.l, short.r);
-  item.slot = short.s;
-  item.name = SLOT_DATA[short.s].pre[rand(0, SLOT_DATA[short.s].pre.length-1)]
-            + SLOT_DATA[short.s].base[rand(0, SLOT_DATA[short.s].base.length-1)];
-  item.affixes = short.a.map(([stat, val]) => {
-    const pool = AFFIX_POOL.find(p => p.stat === stat);
-    const label = pool ? `${pool.label} +${val}${pool.pct?'%':''}` : `${stat} +${val}`;
-    return { stat, val, label };
-  });
-  return item;
+  return {
+    uid: 'eq_' + Date.now() + '_' + Math.random().toString(36).slice(2,7),
+    slot: short.s,
+    rarity: short.r,
+    level: short.l,
+    name: short.n || `${SLOT_DATA[short.s].pre[0]}${SLOT_DATA[short.s].base[0]}`,
+    affixes: short.a.map(([stat, val, label]) => {
+      if (label) return { stat, val, label };
+      const pool = AFFIX_POOL.find(p => p.stat === stat);
+      const lb = pool ? `${pool.label} +${val}${pool.pct?'%':''}` : `${stat} +${val}`;
+      return { stat, val, label: lb };
+    }),
+  };
 }
 
-// ── 跨電腦存檔（組合壓縮版） ──
 function exportCloudSave() {
   try {
-    const save = JSON.parse(JSON.stringify({...S, monster:null, inBattle:false, gameOver:false}));
+    const save = JSON.parse(JSON.stringify({...S, monster:null, inBattle:false, gameOver:false, returnTo3D:false}));
 
-    // 背包只保留稀有度 ≥ 3 的，並壓縮
     if (save.inventory) {
       save.inventory = save.inventory
         .filter(it => it.rarity >= 3)
         .map(compressItem);
     }
-    // 已裝備的壓縮
     if (save.equipment) {
       for (const slot of ['weapon','armor','accessory']) {
         save.equipment[slot] = compressItem(save.equipment[slot]);
@@ -131,6 +131,18 @@ function exportCloudSave() {
     const saved = Math.round((1 - (compressed.length+5)/json.length) * 100);
     log(`☁ 分享碼已產生（省 ${saved}%）`, 'system');
   } catch(e) { log('產生失敗：' + e.message, 'lose'); }
+}
+
+function copyCloudSave() {
+  const el = $('cloudExport');
+  if (!el || !el.value) { log('請先產生分享碼！', 'lose'); return; }
+  el.select();
+  try {
+    document.execCommand('copy');
+    log('📋 已複製到剪貼簿！', 'win');
+  } catch(e) {
+    log('複製失敗，請手動複製。', 'lose');
+  }
 }
 
 function importCloudSave() {
@@ -153,7 +165,6 @@ function importCloudSave() {
   try {
     const p = JSON.parse(json);
 
-    // 還原裝備
     if (p.inventory && p.inventory[0] && p.inventory[0].r !== undefined) {
       p.inventory = p.inventory.map(decompressItem).filter(Boolean);
     }
@@ -166,9 +177,10 @@ function importCloudSave() {
     }
 
     Object.assign(S, p);
-    if (!S.dungeon) S.dungeon = { active:null, floor:0 };
+    if (!S.dungeon) S.dungeon = { active:null, floor:0, cleared:0 };
     if (!S.guild) S.guild = { id:null, contrib:0, questProgress:{}, questClaimed:{} };
     if (!S.pets) S.pets = {};
+    if (S.returnTo3D === undefined) S.returnTo3D = false;
     S.monster = null; S.inBattle = false; S.gameOver = false;
     S.inAbyss = false; S.abyssFloor = 0; S.buttonLocked = false;
     S.dungeon.active = null; S.dungeon.floor = 0;
@@ -180,7 +192,6 @@ function importCloudSave() {
   } catch(e) { log('匯入失敗：' + e.message, 'lose'); }
 }
 
-// 快速載入雲端（開場畫面用）
 function loadFromCloud() {
   openCloud();
 }
