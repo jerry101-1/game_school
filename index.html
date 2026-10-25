@@ -1,9 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-<script type="importmap">
-  { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }
-</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>⚔ RPG 冒險 ⚔</title>
@@ -158,16 +155,11 @@
       <div><div class="mi-name">寵物</div><div class="mi-desc">出戰寵物、查看技能</div></div>
     </button>
   </div>
-  
   <div class="actions" style="margin-top:10px;">
     <button onclick="backToTown()">← 返回村莊</button>
   </div>
 </div>
-<div id="screen-enchant" class="panel hidden">
-  <div class="panel-title">🔮 裝備附魔</div>
-  <div id="enchantContent"></div>
-  <div class="actions"><button onclick="closeEquip()">返回</button></div>
-</div>
+
 <!-- 系統選單 -->
 <div id="screen-system" class="panel hidden">
   <div class="panel-title">⚙️ 系統</div>
@@ -264,7 +256,17 @@
     <div class="tab" data-tab="bag" onclick="switchEquipTab('bag')">🎒 背包</div>
   </div>
   <div id="equipContent"></div>
-  <div class="actions" style="margin-top:10px;"><button onclick="closeEquip()">離開</button></div>
+  <div class="actions" style="margin-top:10px;">
+    <button class="skill" onclick="openEnchant()">🔮 附魔</button>
+    <button onclick="closeEquip()">離開</button>
+  </div>
+</div>
+
+<!-- 附魔 -->
+<div id="screen-enchant" class="panel hidden">
+  <div class="panel-title">🔮 裝備附魔</div>
+  <div id="enchantContent"></div>
+  <div class="actions"><button onclick="closeEnchant()">返回裝備</button></div>
 </div>
 
 <!-- 天賦 -->
@@ -338,6 +340,10 @@
   <div class="panel-title">🌲 荒野探索</div>
   <div class="stat-row"><span>HP：<span class="val" id="advHp">-</span></span><span>金幣：<span class="val" id="advMoney">0</span></span></div>
   <div class="stat-row"><span>經驗：<span class="val" id="advExp">0/100</span></span><span>藥水：<span class="val" id="advPotion">0</span></span></div>
+  <div class="actions" style="margin-top:12px;">
+    <button class="gold" onclick="nextEncounter()">繼續探索</button>
+    <button onclick="returnToTown()">返回村莊</button>
+  </div>
 </div>
 
 <!-- 3D 場景容器 -->
@@ -350,9 +356,14 @@
   <p>靠近怪物觸發戰鬥</p>
 </div>
 
+<!-- 3D 戰鬥提示 -->
+<div id="combat-ui3d" style="display:none; position:fixed; bottom:20px; left:20px; z-index:1001; color:#fff; text-shadow:1px 1px 2px #000;">
+  <div id="combat-monster-name"></div>
+</div>
+
 <!-- 3D 返回按鈕 -->
 <button id="btnExit3d" class="hidden" onclick="exit3DExplore()" style="position:fixed; top:20px; right:20px; z-index:1001; padding:10px; background:#c62828; color:white; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">🏘️ 返回村莊</button>
-  
+
 <!-- 戰鬥 -->
 <div id="screen-battle" class="panel hidden">
   <div class="panel-title">🧙 你（<span id="battleRole"></span> Lv.<span id="battleLevel"></span>）
@@ -392,7 +403,7 @@
     <button id="btnDefend" class="defend" onclick="playerDefend()">防禦</button>
     <button id="btnPotion" class="potion" onclick="playerPotion()">藥水</button>
     <button id="btnCombo"  class="gold hidden" onclick="playerCombo()">⚡ 連擊爆發</button>
-    <button id="btnAuto"   class="gold" onclick="toggleAuto()">自動</button> 
+    <button id="btnAuto"   class="gold" onclick="toggleAuto()">自動</button>
   </div>
   <div id="fruitSkillBar"></div>
   <div id="roleSkillInfo" style="text-align:center;font-size:11px;margin:4px 0;"></div>
@@ -401,11 +412,13 @@
   </div>
 </div>
 
-<div class="panel">
+<!-- 戰鬥記錄 -->
+<div id="screen-log" class="panel hidden">
   <div class="panel-title">📜 戰鬥記錄 <span class="subtitle">（保留最新 60 條）</span></div>
   <div id="log"></div>
 </div>
 
+<!-- 境界 -->
 <div id="screen-realm" class="panel hidden">
   <div class="panel-title">☯️ 境界與飛升</div>
   <div id="realmContent"></div>
@@ -413,7 +426,7 @@
     <button onclick="backToTown()">返回村莊</button>
   </div>
 </div>
-  
+
 <script src="data.js"></script>
 <script src="core.js"></script>
 <script src="battle.js"></script>
@@ -429,7 +442,7 @@
 <script src="cloud.js"></script>
 <script src="rebirth.js"></script>
 <script src="patchnotes.js"></script>
-<!-- ★ 3D 載入區 (直接使用 CDN 全域變數) -->
+<!-- ★ 3D 載入區（使用 CDN 全域變數，勿再加 importmap） -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="3dworld.js"></script>
 <script src="realm.js"></script>
