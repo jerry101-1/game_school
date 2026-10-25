@@ -1033,3 +1033,35 @@ function triggerRandomEvent() {
   }
   if (S.hp <= 0) S.hp = 0;
 }
+
+// 打開附魔畫面 (你可以直接加一個新函式)
+function openEnchant() {
+  showScreen('screen-enchant');
+  const c = $('enchantContent');
+  const cost = 1000000; // 附魔花費 100 萬金幣
+  
+  let html = `<div class="subtitle" style="text-align:center;padding:10px;">為你的裝備隨機附魔（消耗 100 萬金幣）</div>`;
+  html += `<div class="actions"><button class="danger" onclick="doEnchant()">🔮 隨機附魔</button></div>`;
+  c.innerHTML = html;
+}
+
+function doEnchant() {
+  if (S.money < 1000000) { log('金幣不足，需要 100 萬金幣！', 'lose'); return; }
+  S.money -= 1000000;
+  
+  const stats = ['atk', 'def', 'hp', 'crit', 'critDmg'];
+  const pick = stats[rand(0, stats.length - 1)];
+  
+  // 給當前武器附魔
+  if (!S.equipment.weapon) { log('你沒有裝備武器！', 'lose'); return; }
+  
+  if (pick === 'atk') S.equipment.weapon.affixes.push({stat:'atk',val:100,label:'附魔:攻擊+100'});
+  if (pick === 'def') S.equipment.weapon.affixes.push({stat:'def',val:50,label:'附魔:防禦+50'});
+  if (pick === 'hp') S.equipment.weapon.affixes.push({stat:'hp',val:500,label:'附魔:生命+500'});
+  if (pick === 'crit') S.equipment.weapon.affixes.push({stat:'crit',val:5,label:'附魔:爆擊+5%'});
+  if (pick === 'critDmg') S.equipment.weapon.affixes.push({stat:'critDmg',val:50,label:'附魔:爆傷+50%'});
+  
+  applyEquipStats(S.equipment.weapon, 1); // 立即套用新屬性
+  log(`🔮 附魔成功！你的武器獲得了新屬性。`, 'win');
+  renderEquip();
+}
