@@ -1019,7 +1019,7 @@ function triggerRandomEvent() {
 }
 
 // ============================================================
-//  ★ 附魔系統（從裝備畫面進入）
+//  ★ 附魔系統（全身裝備皆可附魔）
 // ============================================================
 function openEnchant() {
   showScreen('screen-enchant');
@@ -1034,61 +1034,89 @@ function closeEnchant() {
 function renderEnchant() {
   const c = $('enchantContent');
   if (!c) return;
-  const weapon = S.equipment.weapon;
 
   let html = `<div class="subtitle" style="text-align:center;padding:10px;">
-    為你的武器隨機附魔（消耗 100 萬金幣）
+    為你的裝備隨機附魔（每次消耗 100 萬金幣）
   </div>`;
 
-  if (weapon) {
-    html += `<div class="equip-slot">
-      <span class="slot-name">武器</span>
+  const slots = [
+    { id: 'weapon', name: '武器', icon: '⚔️' },
+    { id: 'armor',  name: '防具', icon: '🛡️' },
+    { id: 'accessory', name: '飾品', icon: '💍' }
+  ];
+
+  let hasAnyEquip = false;
+
+  slots.forEach(slot => {
+    const item = S.equipment[slot.id];
+    if (item) hasAnyEquip = true;
+
+    html += `<div class="equip-slot" style="margin-bottom:12px; align-items:flex-start;">
+      <span class="slot-name" style="padding-top:10px;">${slot.icon} ${slot.name}</span>
       <div style="flex:1;">
-        <div class="equip-item-name rarity-${weapon.rarity}">${weapon.name}
-          <span class="subtitle">[${RARITY[weapon.rarity].name}] Lv.${weapon.level}</span>
-        </div>
-        <div>${weapon.affixes.map(a => `<span class="equip-affix">${a.label}</span>`).join('')}</div>
+        ${item ? `
+          <div class="equip-item-name rarity-${item.rarity}" style="margin-bottom:4px;">
+            ${item.name} <span class="subtitle">[${RARITY[item.rarity].name}] Lv.${item.level}</span>
+          </div>
+          <div style="margin-bottom:8px;">${item.affixes.map(a => `<span class="equip-affix">${a.label}</span>`).join('')}</div>
+          <button class="danger small" onclick="doEnchant('${slot.id}')">🔮 附魔此部位</button>
+        ` : `
+          <div class="subtitle" style="color:#888; padding:12px 0;">（未裝備）</div>
+        `}
       </div>
     </div>`;
-  } else {
-    html += `<div class="subtitle" style="text-align:center;color:#f44336;padding:12px;">
-      ⚠ 你沒有裝備武器，無法附魔
-    </div>`;
-  }
+  });
 
   html += `<div class="subtitle" style="text-align:center;margin-top:10px;color:#ffd54f;">
     目前金幣：${formatNumber(S.money)}
   </div>`;
 
   html += `<div class="actions" style="margin-top:12px;">
-    <button class="danger" ${weapon ? '' : 'disabled'} onclick="doEnchant()">🔮 隨機附魔（100 萬金）</button>
     <button onclick="closeEnchant()">返回裝備</button>
   </div>`;
 
   c.innerHTML = html;
 }
 
-function doEnchant() {
-  // ★ 先檢查，再扣錢
-  if (!S.equipment.weapon) { log('你沒有裝備武器！', 'lose'); return; }
+function doEnchant(slot) {
+  // ★ 先檢查該部位是否有裝備
+  if (!S.equipment[slot]) { log('該部位沒有裝備！', 'lose'); return; }
+  
   const cost = 1000000;
   if (S.money < cost) { log('金幣不足，需要 100 萬金幣！', 'lose'); return; }
 
   S.money -= cost;
-  const weapon = S.equipment.weapon;
+  const item = S.equipment[slot];
 
-  const affixMap = [
-    { stat:'atk',     val:100, label:'附魔:攻擊 +100' },
-    { stat:'def',     val:50,  label:'附魔:防禦 +50' },
-    { stat:'hp',      val:500, label:'附魔:生命 +500' },
-    { stat:'crit',    val:5,   label:'附魔:爆擊 +5%' },
-    { stat:'critDmg', val:50,  label:'附魔:爆傷 +50%' },
-  ];
+  // 根據不同部位，給予不同的隨機附魔池
+  let affixMap = [];
+  if (slot === 'weapon') {
+    affixMap = [
+      { stat:'atk',     val:100, label:'附魔:攻擊 +100' },
+      { stat:'crit',    val:5,   label:'附魔:爆擊 +5%' },
+      { stat:'critDmg', val:50,  label:'附魔:爆傷 +50%' },
+    ];
+  } else if (slot === 'armor') {
+    affixMap = [
+      { stat:'def',     val:50,  label:'附魔:防禦 +50' },
+      { stat:'hp',      val:500, label:'附魔:生命 +500' },
+      { stat:'dodge',   val:3,   label:'附魔:閃避 +3%' },
+    ];
+  } else if (slot === 'accessory') {
+    affixMap = [
+      { stat:'atk',     val:50,  label:'附魔:攻擊 +50' },
+      { stat:'hp',      val:250, label:'附魔:生命 +250' },
+      { stat:'crit',    val:3,   label:'附魔:爆擊 +3%' },
+      { stat:'gold',    val:20,  label:'附魔:金幣 +20%' },
+      { stat:'exp',     val:20,  label:'附魔:經驗 +20%' },
+    ];
+  }
+
   const a = affixMap[rand(0, affixMap.length - 1)];
-  weapon.affixes.push(a);
-  applyEquipStats(weapon, 1);
+  item.affixes.push(a);
+  applyEquipStats(item, 1);
 
-  log(`🔮 附魔成功！武器獲得「${a.label}」`, 'win');
+  log(`🔮 ${item.name} 附魔成功！獲得「${a.label}」`, 'win');
   renderEnchant();
   updateTownUI();
 }
