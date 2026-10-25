@@ -68,7 +68,7 @@ async function openCloudLeaderboard() {
   c.innerHTML = `
     <div class="subtitle" style="text-align:center;padding:20px;color:#ffd54f;">
       ☁ 目前為本機模式<br>
-      <span style="font-size:11px;color:#888;">（雲端 Token 已移除，排行榜僅記錄本機成績）</span>
+      <span style="font-size:11px;color:#888;">（雲端 Token 已移除，排行榜僅記錄本機成績，日後會加入）</span>
     </div>
     <div class="actions" style="margin-top:10px;">
       <button onclick="renderLeaderboard()">📊 本機紀錄</button>
