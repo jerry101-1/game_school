@@ -171,10 +171,10 @@ function getGuildBonus() {
 }
 
 function getPetBonus() {
-  if (!S.activePet || !S.pets[S.activePet]) return {atkPct:0,exp:0,gold:0,crit:0,lifesteal:0,regen:0};
+  if (!S.activePet || !S.pets[S.activePet]) return {atkPct:0,exp:0,gold:0,crit:0,lifesteal:0,regen:0, dmgReduce:0};
   const pet = S.pets[S.activePet];
   const lvBonus = 1 + (pet.level - 1) * 0.05;
-  const b = {atkPct:0,exp:0,gold:0,crit:0,lifesteal:0,regen:0};
+  const b = {atkPct:0,exp:0,gold:0,crit:0,lifesteal:0,regen:0, dmgReduce:0};
   switch(S.activePet) {
     case 'goblin':  b.gold += 10 * lvBonus; break;
     case 'wolf':    b.crit += 5 * lvBonus; break;
@@ -183,6 +183,10 @@ function getPetBonus() {
     case 'phoenix': b.regen += 2 * lvBonus; break;
     case 'demon':   b.lifesteal += 10 * lvBonus; break;
     case 'god':     b.atkPct += 20 * lvBonus; break;
+    // ★ 新增的被動
+    case 'cyborg':  b.atkPct += 10 * lvBonus; break;
+    case 'reaper':  b.crit += 15 * lvBonus; break;
+    case 'angel':   b.dmgReduce += 10 * lvBonus; break; 
   }
   return b;
 }
