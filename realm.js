@@ -4,16 +4,16 @@
 
 const REALMS = [
   { name: '凡人', mult: 1 },
-  { name: '練氣期', mult: 100 },         // 10萬
-  { name: '築基期', mult: 10000 },        // 100萬
-  { name: '金丹期', mult: 1000000 },      // 1億
-  { name: '元嬰期', mult: 100000000 },    // 100億
-  { name: '化神期', mult: 10000000000 },  // 1000億
-  { name: '煉虛期', mult: 1e12 },         // 1兆
-  { name: '合體期', mult: 1e14 },         // 100兆
-  { name: '大乘期', mult: 1e16 },         // 1京
-  { name: '渡劫期', mult: 1e18 },         // 1垓
-  { name: '仙人',   mult: 1e20 },         // 100垓
+  { name: '練氣期', mult: 100 },
+  { name: '築基期', mult: 10000 },
+  { name: '金丹期', mult: 1000000 },
+  { name: '元嬰期', mult: 100000000 },
+  { name: '化神期', mult: 10000000000 },
+  { name: '煉虛期', mult: 1e12 },
+  { name: '合體期', mult: 1e14 },
+  { name: '大乘期', mult: 1e16 },
+  { name: '渡劫期', mult: 1e18 },
+  { name: '仙人',   mult: 1e20 },
 ];
 
 function openRealm() {
@@ -23,7 +23,6 @@ function openRealm() {
 
 function renderRealm() {
   const c = $('realmContent');
-  // 用攻擊力來算戰力最直覺
   const totalPower = effAtk();
   let currentRealm = 0;
   for (let i = 0; i < REALMS.length; i++) {
@@ -46,13 +45,13 @@ function renderRealm() {
       <div class="subtitle">當你轉生次數達到 10 次以上，可以進行飛升。</div>
       <div class="subtitle" style="color:#ff5252;">飛升將重置所有等級、轉生點數、果實、裝備。</div>
       <div class="subtitle" style="color:#4caf50;">你將獲得「仙緣點數」，解鎖永久特權。</div>
-      
+
       <div style="margin-top:10px; text-align:center;">
         目前轉生次數：<b style="color:#ffd54f;">${S.rebirthCount || 0} / 10</b><br>
         目前仙緣點數：<b style="color:#4fc3f7;">${S.ascendPoints || 0}</b>
       </div>
-      
-      <button class="danger" style="width:100%; margin-top:15px; padding:12px;" 
+
+      <button class="danger" style="width:100%; margin-top:15px; padding:12px;"
         ${(S.rebirthCount >= 10) ? '' : 'disabled'} onclick="doAscend()">
         立即飛升 (獲得 ${Math.floor((S.rebirthCount || 0) / 2)} 仙緣點數)
       </button>
@@ -92,26 +91,34 @@ function doAscend() {
   S.rebirthBonusHp = 0;
   S.rebirthBonusExp = 0;
   S.rebirthBonusGold = 0;
-  
-  // 重置回初始狀態 (呼叫你原本的重置邏輯)
+
+  // 重置進度
   S.level = 1; S.exp = 0; S.expNeeded = 100;
-  const role = ROLES[S.roleType];
-  S.maxHp = role.hp; S.hp = role.hp;
-  S.atk = role.atk; S.def = role.def;
-  S.money = 0; S.potion = 3; S.chapter = 1;
+  S.money = 0; S.potion = 3; S.chapter = 1; S.killCount = 0;
   S.breakthroughLevel = 0; S.breakthroughPoints = 0;
-  S.fruits = {}; S.inventory = []; S.equipment = {weapon:null,armor:null,accessory:null};
-  
+  S.talentPoints = 0; S.talents = {}; S.breakthroughMilestones = {};
+  S.fruits = {}; S.activeFruit = null;
+  S.inventory = []; S.equipment = { weapon:null, armor:null, accessory:null };
+  S.roleLevel = 1; S.roleExp = 0; S.roleLevels = { [S.roleType]: 1 };
+  S.abyssFloor = 0; S.inAbyss = false;
+  S.dungeon = { active:null, floor:0, cleared:0 };
+  S.guild = { id:null, contrib:0, questProgress:{}, questClaimed:{} };
+  S.pets = {}; S.activePet = null;
+  S.combo = 0; S.maxCombo = 0;
+
+  // ★ 用統一函式重算基礎屬性
+  recalcBaseStats();
+  S.hp = effMaxHp();
+
   log(`🚀 飛升成功！獲得 ${pointsGained} 仙緣點數。`, 'win');
   saveGame();
   updateTownUI();
   showScreen('screen-town');
 }
 
-// 購買仙緣特權
 function buyAscendBonus(type) {
   if (!S.ascendPoints || S.ascendPoints <= 0) { log('沒有仙緣點數！', 'lose'); return; }
-  
+
   S.ascendPoints--;
   if (type === 'atk') {
     S.ascendAtkBonus = (S.ascendAtkBonus || 0) + 1;
@@ -120,7 +127,7 @@ function buyAscendBonus(type) {
     S.ascendDropBonus = (S.ascendDropBonus || 0) + 1;
     log(`💰 財富法則成功！永久掉落 +100%（目前 ${S.ascendDropBonus * 100}%）`, 'win');
   }
-  
+
   renderRealm();
   updateTownUI();
 }
