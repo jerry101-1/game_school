@@ -54,16 +54,19 @@ const S = {
   bossStartTime: null,
 
   // ★ 轉生系統
-  rebirthCount: 0,       
-  rebirthPoints: 0,      
-  rebirthBonusAtk: 0,    
-  rebirthBonusHp: 0,     
-  rebirthBonusExp: 0,    
-  rebirthBonusGold: 0,   
+  rebirthCount: 0,
+  rebirthPoints: 0,
+  rebirthBonusAtk: 0,
+  rebirthBonusHp: 0,
+  rebirthBonusExp: 0,
+  rebirthBonusGold: 0,
   // ★ 飛升系統
   ascendPoints: 0,
   ascendAtkBonus: 0,
   ascendDropBonus: 0,
+
+  // ★ 3D 回歸旗標
+  returnTo3D: false,
 };
 
 // ── DOM 工具 ──
@@ -77,6 +80,7 @@ const roll = pct => Math.random() * 100 < pct;
 const LOG_LIMIT = 60;
 function log(msg, cls = '') {
   const logDiv = $('log');
+  if (!logDiv) return;
   const div = document.createElement('div');
   div.textContent = msg;
   if (cls) div.className = cls;
@@ -84,26 +88,26 @@ function log(msg, cls = '') {
   while (logDiv.children.length > LOG_LIMIT) logDiv.removeChild(logDiv.firstChild);
   logDiv.scrollTop = logDiv.scrollHeight;
 }
-function clearLog() { $('log').innerHTML = ''; }
+function clearLog() { const el = $('log'); if (el) el.innerHTML = ''; }
 
 // ── 畫面切換 ──
+// ★ 已補上 screen-enchant 與 screen-log
 function showScreen(name) {
-  // 先隱藏所有畫面
   ['screen-start','screen-town','screen-shop','screen-loot',
    'screen-fruit','screen-equip','screen-talent','screen-abyss',
    'screen-adventure','screen-battle','screen-job','screen-forge',
    'screen-dungeon','screen-guild','screen-pet','screen-cloud',
    'screen-train','screen-collect','screen-system','screen-gamble',
-   'screen-leaderboard', 'screen-rebirth', 'screen-patch','screen-realm']
-    .forEach(s => { 
-      const el = document.getElementById(s); 
-      if (el) el.classList.add('hidden'); 
+   'screen-leaderboard', 'screen-rebirth', 'screen-patch','screen-realm',
+   'screen-enchant', 'screen-log']
+    .forEach(s => {
+      const el = document.getElementById(s);
+      if (el) el.classList.add('hidden');
     });
-    
-  // 顯示目標畫面
-  if (name) { 
-    const el = document.getElementById(name); 
-    if (el) el.classList.remove('hidden'); 
+
+  if (name) {
+    const el = document.getElementById(name);
+    if (el) el.classList.remove('hidden');
   }
 }
 
@@ -114,16 +118,15 @@ function elemName(e) { return {1:'火',2:'冰',3:'雷',4:'物理'}[e] || '無'; 
 function formatNumber(num) {
   if (num === undefined || num === null || isNaN(num)) return '0';
   if (num < 10000) return Math.floor(num).toString();
-  
+
   const units = ['', '萬', '億', '兆', '京', '垓', '秭', '穰', '溝', '澗', '正', '載'];
-  const order = Math.floor(Math.log10(num) / 4); 
-  
+  const order = Math.floor(Math.log10(num) / 4);
+
   if (order >= units.length) return num.toExponential(2);
-  
+
   const unit = units[order];
   const scaled = num / Math.pow(10000, order);
-  
-  // ★ 限制最多顯示小數點後兩位，且去除多餘的 0
+
   return scaled.toFixed(2).replace(/\.00$/, '') + unit;
 }
 
@@ -183,20 +186,19 @@ function getPetBonus() {
     case 'phoenix': b.regen += 2 * lvBonus; break;
     case 'demon':   b.lifesteal += 10 * lvBonus; break;
     case 'god':     b.atkPct += 20 * lvBonus; break;
-    // ★ 新增的被動
     case 'cyborg':  b.atkPct += 10 * lvBonus; break;
     case 'reaper':  b.crit += 15 * lvBonus; break;
-    case 'angel':   b.dmgReduce += 10 * lvBonus; break; 
+    case 'angel':   b.dmgReduce += 10 * lvBonus; break;
   }
   return b;
 }
 
-// ── 有效屬性（結合轉生加成） ──
+// ── 有效屬性（結合轉生與飛升加成） ──
 function effAtk() {
   const t = getTalentBonus(), b = getBreakthroughBonus(), g = getGuildBonus(), p = getPetBonus();
   const base = S.atk * (1 + (t.atkPct + b.atkPct + g.atkPct + p.atkPct)/100);
   const rebirthMult = 1 + (S.rebirthBonusAtk || 0) / 100;
-  const ascendMult = 1 + (S.ascendAtkBonus || 0); // ★ 仙緣加成：每級 +100% (即乘 2)
+  const ascendMult = 1 + (S.ascendAtkBonus || 0);
   return Math.floor(base * rebirthMult * ascendMult);
 }
 function effDef() {
@@ -207,7 +209,7 @@ function effMaxHp() {
   const t = getTalentBonus(), b = getBreakthroughBonus();
   const base = S.maxHp * (1 + (t.hpPct + b.hpPct)/100);
   const rebirthMult = 1 + (S.rebirthBonusHp || 0) / 100;
-  const ascendMult = 1 + (S.ascendAtkBonus || 0); // ★ 仙緣加成
+  const ascendMult = 1 + (S.ascendAtkBonus || 0);
   return Math.max(1, Math.floor(base * rebirthMult * ascendMult));
 }
 function effDodge()    { return S.playerDodge + getTalentBonus().dodge; }
@@ -227,7 +229,6 @@ function breakthroughCost() {
   return 500 * 50 + 100 * (lv - 49);
 }
 
-// ── 突破：升自訂數量 ──
 function doBreakthroughCustom(amount) {
   if (!allTalentsMaxed()) { log('需要先將所有天賦點滿！', 'lose'); return; }
   let bp = S.breakthroughPoints || 0;
@@ -240,26 +241,25 @@ function doBreakthroughCustom(amount) {
   while (leveled < amount && bp > 0) {
     const cost = breakthroughCost();
     if (S.money < cost) break;
-    
+
     S.money -= cost; bp--; S.breakthroughLevel++;
     leveled++; spentBp++; spentGold += cost;
-    
+
     const ms = BREAKTHROUGH_MILESTONES[S.breakthroughLevel];
     if (ms && !S.breakthroughMilestones[ms.key]) {
       S.breakthroughMilestones[ms.key] = true;
       log(`✦ 突破里程碑 Lv.${S.breakthroughLevel}：${ms.name}！`, 'win');
     }
-    if (leveled >= 50000) break; // 安全上限，避免網頁卡死
+    if (leveled >= 50000) break;
   }
 
   S.breakthroughPoints = bp;
   if (leveled === 0) { log(`⚠ 金幣不足！下一級需要 ${breakthroughCost().toLocaleString()} 金。`, 'lose'); return; }
-  
+
   log(`✦ 一次突破 ${leveled} 級！花費 ${spentBp} 突破點 + ${formatNumber(spentGold)} 金幣`, 'win');
   renderTalent(); updateTownUI(); checkAchievements();
 }
 
-// ── 突破 Max（花光金幣與突破點）──
 function doBreakthroughMax() {
   if (!allTalentsMaxed()) { log('需要先將所有天賦點滿！', 'lose'); return; }
   let bp = S.breakthroughPoints || 0;
@@ -269,15 +269,10 @@ function doBreakthroughMax() {
   let spentGold = 0;
   let lv = S.breakthroughLevel || 0;
 
-  // 用數學公式直接算，不要一級一級跑迴圈
   while (bp > 0) {
-    // 計算當前等級的突破花費
     const cost = lv < 50 ? 500 * (lv + 1) : 500 * 50 + 100 * (lv - 49);
-    
-    // 如果金幣不夠，就停下來
     if (S.money < cost) break;
 
-    // ★ 核心優化：如果金幣極多，一次算 1000 級
     if (S.money > cost * 1000 && bp >= 1000) {
       S.money -= cost * 1000;
       bp -= 1000;
@@ -285,7 +280,6 @@ function doBreakthroughMax() {
       leveled += 1000;
       spentGold += cost * 1000;
     } else {
-      // 剩下的零頭一級一級算
       S.money -= cost;
       bp--;
       lv++;
@@ -298,10 +292,10 @@ function doBreakthroughMax() {
   S.breakthroughPoints = bp;
 
   if (leveled === 0) { log(`⚠ 金幣不足！下一級需要 ${breakthroughCost().toLocaleString()} 金。`, 'lose'); return; }
-  
+
   log(`✦ 瞬間突破 ${leveled.toLocaleString()} 級！花費 ${bp > 0 ? '全部' : ''} 突破點 + ${formatNumber(spentGold)} 金幣`, 'win');
   if (bp > 0) log(`（金幣不足，剩餘突破點：${bp.toLocaleString()}）`, 'system');
-  
+
   renderTalent(); updateTownUI(); checkAchievements();
 }
 
@@ -355,9 +349,8 @@ function doRebirth() {
   S.level = 1; S.exp = 0; S.expNeeded = 100; S.money = 0; S.chapter = 1; S.killCount = 0;
   S.breakthroughLevel = 0; S.breakthroughPoints = 0; S.talentPoints = 0; S.talents = {};
   S.inventory = []; S.equipment = {weapon:null, armor:null, accessory:null};
-  const role = ROLES[S.roleType];
-  S.maxHp = role.hp; S.hp = role.hp; S.atk = role.atk; S.def = role.def;
-  if (S.roleType === 3) S.playerDodge = 15; else if (S.roleType === 12) S.playerDodge = 10; else S.playerDodge = 5;
+  recalcBaseStats();
+  S.hp = effMaxHp();
   updateTownUI(); saveGame();
   log(`🌟 轉生成功！第 ${S.rebirthCount} 次轉生，獲得 ${points} 轉生點數！`, 'win');
   showScreen('screen-town');
@@ -365,13 +358,12 @@ function doRebirth() {
 
 function upgradeRebirth(type, amount = 1) {
   if (S.rebirthPoints < 1) { log('沒有轉生點數！', 'lose'); return; }
-  
-  // 如果傳入 'max'，就把剩下的點數全砸下去
+
   let count = amount === 'max' ? S.rebirthPoints : Math.min(amount, S.rebirthPoints);
   if (count <= 0) return;
 
   S.rebirthPoints -= count;
-  
+
   if (type === 'atk') {
     S.rebirthBonusAtk += 10 * count;
     log(`🌟 兌換成功：永久攻擊力 +${10 * count}%（消耗 ${count} 點）`, 'win');
@@ -385,7 +377,7 @@ function upgradeRebirth(type, amount = 1) {
     S.rebirthBonusGold += 20 * count;
     log(`🌟 兌換成功：永久金幣 +${20 * count}%（消耗 ${count} 點）`, 'win');
   }
-  
+
   renderRebirth();
   updateTownUI();
 }
@@ -582,11 +574,27 @@ function updateFavicon(hpPct) {
 }
 
 function cleanupInventory() {
-  if (!S.inventory || S.inventory.length <= 50) return; 
+  if (!S.inventory || S.inventory.length <= 50) return;
   S.inventory.sort((a, b) => (b.rarity - a.rarity) || (b.level - a.level));
   const deletedCount = S.inventory.length - 50;
   S.inventory = S.inventory.slice(0, 50);
   if (deletedCount > 0) {
     log(`🗑️ 【系統】背包已滿，自動分解了 ${deletedCount} 件裝備。`, 'system');
   }
+}
+
+// ★ 統一重算基礎屬性（轉職 / 轉生 / 飛升共用）
+function recalcBaseStats() {
+  const role = ROLES[S.roleType];
+  if (!role) return;
+  for (const slot of ['weapon','armor','accessory']) applyEquipStats(S.equipment[slot], -1);
+  S.maxHp = role.hp;
+  S.atk = role.atk;
+  S.def = role.def;
+  S.atk += S.contractLevel * 250;
+  S.maxHp -= S.contractLevel * 100;
+  if (S.maxHp < 100) S.maxHp = 100;
+  for (const slot of ['weapon','armor','accessory']) applyEquipStats(S.equipment[slot], 1);
+  if (S.hp > effMaxHp()) S.hp = effMaxHp();
+  if (S.hp < 1) S.hp = 1;
 }
