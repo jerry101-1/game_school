@@ -207,9 +207,11 @@ const FRUITS = {
 };
 
 const FRUIT_POOL = [
-  {id:"rubber",weight:30},{id:"flame",weight:20},{id:"ice",weight:20},{id:"thunder",weight:20},
-  {id:"dark",weight:10},{id:"light",weight:10},{id:"quake",weight:5},{id:"dragon",weight:3},
+  {id:"rubber",weight:20},{id:"flame",weight:15},{id:"ice",weight:15},{id:"thunder",weight:15},
+  {id:"dark",weight:8},{id:"light",weight:8},{id:"quake",weight:5},{id:"dragon",weight:3},
   {id:"phoenix",weight:2},{id:"void",weight:1},
+  // ★ 新增
+  {id:"plant",weight:20},{id:"gun",weight:10},{id:"revive",weight:8},{id:"time",weight:2},{id:"gravity",weight:1},
 ];
 
 // ── 天賦 ──
@@ -326,6 +328,10 @@ const PET_POOL = [
   {id:"phoenix",weight:3},
   {id:"demon",  weight:2},
   {id:"god",    weight:1},
+  // ★ 新增
+  {id:"cyborg", weight:8},
+  {id:"reaper", weight:3},
+  {id:"angel",  weight:1},
 ];
 
 // ── 副本（5 個） ──
