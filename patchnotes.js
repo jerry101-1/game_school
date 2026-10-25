@@ -19,6 +19,14 @@ function renderPatchNotes() {
   // ★ 在這裡維護你的更新紀錄
   const notes = [
     {
+      version: 'v1.6.1',
+      date: '2026-10-25',
+      color: '#5cd8a4',
+      changes: [
+        '➕新增5種果實及3種寵物',
+      ]
+    },
+    {
       version: 'v1.6.0',
       date: '2026-10-18',
       color: '#ff9800',
