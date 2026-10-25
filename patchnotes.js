@@ -16,14 +16,18 @@ function renderPatchNotes() {
   const c = document.getElementById('patchContent');
   if (!c) return;
 
-  // ★ 在這裡維護你的更新紀錄
+  // ★ 在這裡維護更新紀錄（第一筆視為最新版本）
   const notes = [
     {
       version: 'v1.6.1',
       date: '2026-10-25',
       color: '#5cd8a4',
       changes: [
-        '➕新增5種果實及3種寵物',
+        '➕ 新增 5 種果實及 3 種寵物',
+        '🔮 修正附魔系統：先檢查武器再扣金幣',
+        '🖼️ 修正附魔畫面與戰鬥記錄的顯示切換',
+        '🧮 修正分享碼裝備名稱與附魔 label 遺失問題',
+        '🐾 優化寵物大量經驗升級的計算速度與準確度',
       ]
     },
     {
@@ -45,7 +49,7 @@ function renderPatchNotes() {
       date: '2026-10-20',
       color: '#4fc6b2',
       changes: [
-        '📈優化按鈕與寶箱判斷'
+        '📈 優化按鈕與寶箱判斷'
       ]
     },
     {
@@ -104,8 +108,11 @@ function renderPatchNotes() {
     }
   ];
 
+  // ★ 版本號從 notes[0] 動態取
+  const latest = notes[0] ? notes[0].version : '—';
+
   let html = `<div class="subtitle" style="text-align:center;margin-bottom:15px;">
-    目前版本：<b style="color:#4fc3f7;">v1.5.1</b>
+    目前版本：<b style="color:#4fc3f7;">${latest}</b>
   </div>`;
 
   notes.forEach(note => {
@@ -114,8 +121,7 @@ function renderPatchNotes() {
     html += `${note.version} <span class="subtitle" style="font-weight:normal;">(${note.date})</span>`;
     html += `</div>`;
     html += `<ul style="padding-left: 20px; font-size: 13px; line-height: 1.6; color: #ccc;">`;
-    
-    // ★ 這裡加了防呆：就算你打成 change，或是漏寫，也不會崩潰
+
     if (note.changes && Array.isArray(note.changes)) {
       note.changes.forEach(change => {
         html += `<li style="margin-bottom: 6px;">${change}</li>`;
@@ -123,7 +129,7 @@ function renderPatchNotes() {
     } else {
       html += `<li style="color:#f44336;">（此版本無更新紀錄或格式錯誤）</li>`;
     }
-    
+
     html += `</ul></div>`;
   });
 
