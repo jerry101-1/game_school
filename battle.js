@@ -3,8 +3,7 @@
 // ============================================================
 
 function startBattle() {
-  forceResetBattleState()
-  // ★ 保險：強制解鎖所有按鈕
+  forceResetBattleState();
   S.buttonLocked = false;
   ['btnAttack','btnSkill','btnPower','btnDefend','btnPotion'].forEach(id => {
     const el = document.getElementById(id);
@@ -12,7 +11,7 @@ function startBattle() {
   });
   const btnAuto = document.getElementById('btnAuto');
   if (btnAuto) btnAuto.disabled = false;
-  
+
   S.inBattle = true; S.gameOver = false;
   S.skillCD = 0; S.fruitSkillCD = 0;
   S.isDefending = false; S.isShieldActive = false;
@@ -28,6 +27,9 @@ function startBattle() {
   }
 
   showScreen('screen-battle');
+  const logPanel = $('screen-log');           // ★ 顯示戰鬥記錄
+  if (logPanel) logPanel.classList.remove('hidden');
+
   renderBattleUI();
   setButtonsEnabled(true);
 
@@ -50,28 +52,28 @@ function startBattle() {
 function setButtonsEnabled(on) {
   S.buttonLocked = !on;
   const ids = ['btnAttack','btnSkill','btnPower','btnDefend','btnPotion','btnAuto'];
-  
+
   if (!on) {
-    ids.forEach(id => { 
-      const el = $(id); 
-      if (el) el.disabled = true; 
+    ids.forEach(id => {
+      const el = $(id);
+      if (el) el.disabled = true;
     });
     renderFruitSkillBar();
     return;
   }
-  
-  const setBtn = (id, isDisabled) => { 
-    const el = $(id); 
-    if (el) el.disabled = isDisabled; 
+
+  const setBtn = (id, isDisabled) => {
+    const el = $(id);
+    if (el) el.disabled = isDisabled;
   };
-  
+
   setBtn('btnAttack', false);
   setBtn('btnSkill', S.skillCD > 0);
   setBtn('btnPower', false);
   setBtn('btnDefend', false);
   setBtn('btnPotion', S.potion <= 0);
   setBtn('btnAuto', false);
-  
+
   renderFruitSkillBar();
 }
 
@@ -81,7 +83,6 @@ function renderBattleUI() {
   const bar = $('playerHpBar');
   bar.style.width = hpPct + '%';
   bar.className = 'hp-fill ' + (hpPct > 60 ? 'green' : hpPct > 30 ? 'yellow' : 'red');
-  // ★ 套用格式化
   $('playerHpText').textContent = `${formatNumber(Math.max(0,S.hp))} / ${formatNumber(maxHp)}`;
   $('battleRole').textContent = S.roleName;
   $('battleLevel').textContent = formatNumber(S.level);
@@ -131,6 +132,7 @@ function renderBattleUI() {
 
 function renderFruitSkillBar() {
   const bar = $('fruitSkillBar');
+  if (!bar) return;
   if (!S.activeFruit || !S.fruits[S.activeFruit]) {
     bar.innerHTML = '<span class="subtitle">尚未裝備果實</span>';
     return;
@@ -227,20 +229,17 @@ function playerFruitSkill() {
     S.hp = Math.min(effMaxHp(), S.hp + steal);
     log(`吸收精氣，回復 ${steal} 點 HP！`,'win');
   }
-   if (S.activeFruit === 'revive') {
-    const heal = Math.floor(effMaxHp() * 0.15); // 粗略回復
+  if (S.activeFruit === 'revive') {
+    const heal = Math.floor(effMaxHp() * 0.15);
     S.hp = Math.min(effMaxHp(), S.hp + heal);
     log(`🌿 治癒果實恢復了 ${heal} HP！`, 'win');
   }
   if (S.activeFruit === 'gravity') {
     log(`🌌 無視防禦攻擊！`, 'crit');
-    // 這邊可以修改傷害計算，直接無視防禦
   }
   if (S.activeFruit === 'gun') {
-    // 爆擊率大幅提升
     log(`🔫 槍械射擊觸發爆擊！`, 'crit');
   }
-
 
   m.hp -= pDmg;
   log(`造成 ${pDmg} 點傷害！`,'dmg-player');
@@ -334,7 +333,6 @@ function playerAction(action) {
     if (isCrit) {
       S.combo++;
       if (S.combo > S.maxCombo) S.maxCombo = S.combo;
-      // ★ 公會連擊任務
       if (typeof addGuildProgress === 'function') {
         if (S.combo === 10) addGuildProgress('maxCombo10', 1);
         if (S.combo === 30) addGuildProgress('maxCombo30', 1);
@@ -356,7 +354,6 @@ function playerAction(action) {
     S.combo = 0;
   }
 
-    // ★ 寵物自動攻擊（30% 機率）
   if (typeof petAutoAttack === 'function') petAutoAttack();
 
   renderBattleUI();
@@ -495,30 +492,28 @@ function toggleAuto() {
 
 function autoDecide() {
   if (!S.inBattle || S.gameOver) return;
-  
-  // ★ 如果正在寶箱畫面，自動選第一個
-  if (!document.getElementById('screen-loot').classList.contains('hidden')) {
+
+  // ★ 寶箱畫面：自動選第一個
+  const lootScreen = document.getElementById('screen-loot');
+  if (lootScreen && !lootScreen.classList.contains('hidden')) {
     const lootCards = document.querySelectorAll('#lootList .loot-card');
-    if (lootCards.length > 0) {
-      lootCards[0].click();
-    }
+    if (lootCards.length > 0) lootCards[0].click();
     return;
   }
 
-  // ★ 如果正在戰鬥結算，自動繼續探索
-  if (!document.getElementById('btnContinue').classList.contains('hidden')) {
+  // ★ 結算畫面：自動繼續探索（btnContinue 可能不存在，需防護）
+  const btnContinue = document.getElementById('btnContinue');
+  if (btnContinue && !btnContinue.classList.contains('hidden')) {
     continueAdventure();
     return;
   }
 
-  // 一般戰鬥邏輯
   if (S.hp < effMaxHp()*0.3 && S.potion > 0) { playerPotion(); return; }
   if (S.combo >= 5) { playerCombo(); return; }
   if (S.activeFruit && S.fruits[S.activeFruit] && S.fruitSkillCD === 0) {
     const f = FRUITS[S.activeFruit];
     const data = S.fruits[S.activeFruit];
-    const hasSkill = f.skills.some(sk => data.level >= sk.lv);
-    if (hasSkill) { playerFruitSkill(); return; }
+    if (f.skills.some(sk => data.level >= sk.lv)) { playerFruitSkill(); return; }
   }
   if (S.skillCD === 0) { playerSkill(); return; }
   playerAttack();
@@ -527,7 +522,7 @@ function autoDecide() {
 // ── 怪物擊敗 ──
 function onMonsterDefeated() {
   if (typeof cleanupInventory === 'function') cleanupInventory();
-  
+
   const m = S.monster;
   S.inBattle = false;
   S.gameOver = true;
@@ -549,33 +544,29 @@ function onMonsterDefeated() {
   S.exp += totalExp;
   S.money += totalGold;
   S.killCount++;
-  if (typeof addGuildProgress === 'function') addGuildProgress('killCount', 1);  // ★ 公會任務
-  log(`擊敗 ${m.name}！獲得 ${totalExp} 經驗與 ${totalGold} 金幣。`,'win');
+  if (typeof addGuildProgress === 'function') addGuildProgress('killCount', 1);
+  log(`擊敗 ${m.name}！獲得 ${formatNumber(totalExp)} 經驗與 ${formatNumber(totalGold)} 金幣。`,'win');
 
-  // 果實經驗
   if (S.activeFruit && S.fruits[S.activeFruit]) {
     let fruitExpRatio = m.isBoss ? 0.15 : 0.10;
     if (S.inAbyss) fruitExpRatio += 0.05;
     const fruitExp = Math.max(1, Math.floor(m.exp * fruitExpRatio));
     const gained = gainFruitExp(fruitExp);
-    log(`🍇 果實吸收戰鬥精華，獲得 ${gained} 點經驗。`, 'fruit-text');
+    log(`🍇 果實吸收戰鬥精華，獲得 ${formatNumber(gained)} 點經驗。`, 'fruit-text');
   }
-  // 職業經驗
   if (S.roleType) {
     let roleExpRatio = m.isBoss ? 0.20 : 0.12;
     if (S.inAbyss) roleExpRatio += 0.05;
     const roleExp = Math.max(1, Math.floor(m.exp * roleExpRatio));
     const gained = gainRoleExp(roleExp);
-    log(`⭐ 職業吸收戰鬥精華，獲得 ${gained} 點經驗。`, 'talent-text');
+    log(`⭐ 職業吸收戰鬥精華，獲得 ${formatNumber(gained)} 點經驗。`, 'talent-text');
   }
-  // 寵物經驗
   if (S.activePet && S.pets[S.activePet]) {
     const petExp = Math.max(1, Math.floor(m.exp * 0.08));
     gainPetExp(petExp);
   }
   checkAchievements();
 
-  // 深淵模式
   if (S.inAbyss) {
     const dropRarity = pickRarity(S.abyssFloor / 3);
     const item = genEquipment(S.level, dropRarity);
@@ -586,7 +577,6 @@ function onMonsterDefeated() {
     setTimeout(() => abyssNextFloor(), 800);
     return;
   }
-  // 副本模式
   if (S.dungeon.active) {
     const item = genEquipment(S.level + 5, pickRarity(15));
     S.inventory.push(item);
@@ -596,7 +586,6 @@ function onMonsterDefeated() {
     return;
   }
 
-  // 一般模式掉落
   let dropRate = 25;
   if (m.prefixType > 0) dropRate += 25;
   if (m.type === 7) dropRate = 100;
@@ -615,7 +604,7 @@ function onMonsterDefeated() {
 }
 
 // ── 寶箱 ──
-let isLootClicking = false; // ★ 防連點鎖
+let isLootClicking = false;
 
 function offerLoot(fromAbyss) {
   const pool = [
@@ -632,16 +621,15 @@ function offerLoot(fromAbyss) {
     const i = rand(0, pool.length-1);
     if (!chosen.includes(i)) chosen.push(i);
   }
-  
+
   log('★ 怪物掉落了寶箱！請選擇獎勵：','loot');
   showScreen('screen-loot');
-  
+
   const list = $('lootList');
-  list.innerHTML = ''; // 先清空，避免 DOM 疊加卡頓
-  
-  // 使用 DocumentFragment 減少瀏覽器重繪次數
+  list.innerHTML = '';
+
   const fragment = document.createDocumentFragment();
-  
+
   chosen.forEach((idx, i) => {
     const l = pool[idx];
     const card = document.createElement('div');
@@ -649,23 +637,22 @@ function offerLoot(fromAbyss) {
     card.innerHTML = `<div><div class="loot-name">(${i+1}) ${l.name}</div>
       <div class="loot-val">${l.type === 6 ? '回復 30% 最大 HP' : l.type === 7 ? '藥水 +1' : '+' + l.val}</div></div>
       <button class="small gold">選擇</button>`;
-      
+
     card.onclick = () => {
-      // ★ 防連點機制
       if (isLootClicking) return;
       isLootClicking = true;
-      
+
       applyLoot(l);
-      isLootClicking = false; // 解鎖
-      
+      isLootClicking = false;
+
       if (S.dungeon.active) { setTimeout(() => dungeonNextFloor(), 400); }
       else if (fromAbyss) { setTimeout(() => abyssNextFloor(), 400); }
       else { afterBattle(); }
     };
     fragment.appendChild(card);
   });
-  
-  list.appendChild(fragment); // 一次性塞入畫面，效能提升 10 倍
+
+  list.appendChild(fragment);
 }
 
 function applyLoot(l) {
@@ -683,15 +670,13 @@ function applyLoot(l) {
 function afterBattle() {
   S.buttonLocked = false;
   showScreen('screen-battle');
-  
+
   if (S.inAbyss) { setTimeout(() => abyssNextFloor(), 600); return; }
   if (S.dungeon.active) { setTimeout(() => dungeonNextFloor(), 600); return; }
 
-  // ==========================================
-  // ★ 極速升級邏輯（解決一次升幾千級卡死問題）
-  // ==========================================
+  // 極速升級
   let levelsGained = 0;
-  
+
   while (S.exp >= S.expNeeded) {
     S.exp -= S.expNeeded;
     S.level++;
@@ -712,17 +697,14 @@ function afterBattle() {
       S.talentPoints++;
     }
 
-    // ★ 如果升超過 100 級，剩下的經驗直接用「批次計算」跳過，避免卡死
     if (levelsGained >= 100) {
-      // 粗估剩下的等級（用經驗值反推）
       let remainingExp = S.exp;
       let estLevel = S.level;
-      // 每次跳 100 級估算
       while (remainingExp >= Math.floor(100 * Math.pow(estLevel, 1.5))) {
         remainingExp -= Math.floor(100 * Math.pow(estLevel, 1.5));
-        estLevel += 100; // 一次跳 100 級
+        estLevel += 100;
       }
-      
+
       const jumpLevels = estLevel - S.level;
       if (jumpLevels > 0) {
         S.maxHp += jumpLevels * (100 + estLevel * 15);
@@ -735,18 +717,15 @@ function afterBattle() {
         else S.talentPoints += jumpLevels;
         levelsGained += jumpLevels;
       }
-      break; // 跳出迴圈，不再一級一級算
+      break;
     }
   }
 
   if (levelsGained > 0) {
-    S.hp = effMaxHp(); // 升級後補滿血
+    S.hp = effMaxHp();
     log(`★ 【等級提升】一口氣升了 ${levelsGained} 級！目前等級 Lv.${S.level}`, 'win');
   }
 
-  // ==========================================
-  // 戰鬥後續處理
-  // ==========================================
   if (S.isBossFight && S.monster && S.monster.hp <= 0) {
     S.chapter++;
     log(`★ 第 ${S.chapter-1} 章通關！進入第 ${S.chapter} 章！`,'win');
@@ -756,27 +735,26 @@ function afterBattle() {
     return;
   }
 
-  // ★ 判斷：如果從 3D 來的，直接回去
   if (S.returnTo3D) {
     returnToTown();
     return;
   }
 
-  // ★ 血量過低，自動回村
   if (S.hp < effMaxHp() * 0.2) {
     log(`⚠ 血量過低，自動返回村莊。`, 'lose');
     setTimeout(() => returnToTown(), 800);
     return;
   }
 
-  // 繼續下一場
   log(`⚔ 繼續探索下一場...`, 'system');
   setTimeout(() => nextEncounter(), 800);
 }
 
 function continueAdventure() {
-  $('btnContinue').classList.add('hidden');
-  $('btnReturn').classList.add('hidden');
+  const btn = $('btnContinue');
+  if (btn) btn.classList.add('hidden');
+  const btnReturn = $('btnReturn');
+  if (btnReturn) btnReturn.classList.add('hidden');
   if (S.hp <= 0) { handleDeath(); return; }
   if (S.autoMode) {
     if (S.hp < effMaxHp()*0.3) { log('【自動】血量過低，返回村莊。','system'); returnToTown(); return; }
@@ -786,30 +764,34 @@ function continueAdventure() {
   nextEncounter();
 }
 
-//回村
+// 回村
 function returnToTown() {
-  if ($('btnContinue')) $('btnContinue').classList.add('hidden');
+  const btn = $('btnContinue');
+  if (btn) btn.classList.add('hidden');
   S.autoMode = false;
   S.inBattle = false;
   S.inAbyss = false;
   S.abyssFloor = 0;
   S.dungeon.active = null;
   S.dungeon.floor = 0;
+
+  const logPanel = $('screen-log');           // ★ 隱藏戰鬥記錄
+  if (logPanel) logPanel.classList.add('hidden');
+
   updateTownUI();
   saveGame();
-   // ★ 檢查是否要回到 3D
+
+  // ★ 3D 回歸：交給 3dworld.js 的專用函式
   if (S.returnTo3D) {
     S.returnTo3D = false;
-    S.inBattle = false;
-    showScreen('screen-town'); // 先切回村莊隱藏戰鬥
-    start3DExplore(); // 重新進入 3D (或者寫一個恢復 3D 畫面的函式)
-    return;
+    if (typeof resume3DAfterBattle === 'function') {
+      resume3DAfterBattle();
+      return;
+    }
   }
 
-  // 否則正常回村莊
   showScreen('screen-town');
   log('你回到了村莊。','system');
-  
 }
 
 // ── 強制重置戰鬥狀態（保險用）──
