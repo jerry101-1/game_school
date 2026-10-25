@@ -1,5 +1,5 @@
 // ============================================================
-//  ★ 村莊 — 商店、果實、裝備、天賦、深淵、轉職、合成
+//  ★ 村莊 — 商店、果實、裝備、天賦、深淵、轉職、合成、附魔
 // ============================================================
 
 // ── 子選單切換 ──
@@ -26,7 +26,7 @@ function setShopBatch(n) {
 }
 
 function renderShop() {
-  $('shopMoney').textContent = `（金幣：${S.money}）`;
+  $('shopMoney').textContent = `（金幣：${formatNumber(S.money)}）`;
   const items = [];
 
   // ── 武器強化 ──
@@ -154,7 +154,7 @@ function renderShop() {
       let lv = S.expShopLevel;
       let money = S.money;
       if (lv === 0) {
-        if (money >= 600) { money -= 600; lv = 1; } 
+        if (money >= 600) { money -= 600; lv = 1; }
         else return 0;
       }
       const a = 600 + lv * 500;
@@ -303,7 +303,7 @@ function pickFruit() {
   return FRUIT_POOL[0].id;
 }
 function renderFruit() {
-  $('fruitMoney').textContent = `（金幣：${S.money}）`;
+  $('fruitMoney').textContent = `（金幣：${formatNumber(S.money)}）`;
   const c = $('fruitContent');
   if (fruitTab === 'draw') {
     const cost = drawCost();
@@ -313,7 +313,7 @@ function renderFruit() {
     }
     c.innerHTML = `<div style="text-align:center;padding:10px;">
       <div class="subtitle">每次抽果消耗 <b style="color:#ffd54f;">${cost} 金幣</b></div>
-      <div class="subtitle" style="margin-bottom:10px;">目前等級 Lv.${S.level}｜金幣 ${S.money}</div>
+      <div class="subtitle" style="margin-bottom:10px;">目前等級 Lv.${S.level}｜金幣 ${formatNumber(S.money)}</div>
       <div class="actions">
         <button class="fruit" onclick="drawFruit(1)">抽 1 次（${cost} 金）</button>
         <button class="fruit" onclick="drawFruit(10)">抽 10 次（${cost*10} 金）</button>
@@ -385,7 +385,7 @@ function switchEquipTab(t) {
   renderEquip();
 }
 function renderEquip() {
-  $('equipMoney').textContent = `（金幣：${S.money}｜背包 ${S.inventory.length} 件）`;
+  $('equipMoney').textContent = `（金幣：${formatNumber(S.money)}｜背包 ${S.inventory.length} 件）`;
   const c = $('equipContent');
   const itemHTML = (item, actions = true) => {
     if (!item) return '';
@@ -462,7 +462,7 @@ function sellItem(item) {
   const price = (5 + item.level * 3) * item.rarity;
   S.money += price;
   S.inventory = S.inventory.filter(i => i.uid !== item.uid);
-  log(`賣出 ${item.name}，獲得 ${price} 金幣。`, 'loot');
+  log(`賣出 ${item.name}，獲得 ${formatNumber(price)} 金幣。`, 'loot');
   renderEquip();
   updateTownUI();
 }
@@ -491,7 +491,6 @@ function renderTalent() {
     }
     html += `</div>`;
   }
-  // ★ 天賦全滿時顯示兌換區
   if (allTalentsMaxed() && S.talentPoints > 0) {
     html += `<div class="talent-branch" style="border-color:#ffd54f;background:linear-gradient(135deg,#1a1a10,#2a2a10);">
       <div class="talent-branch-title" style="color:#ffd54f;">✨ 天賦點兌換</div>
@@ -529,7 +528,6 @@ function renderBreakthroughSection() {
   const maxed = allTalentsMaxed();
   const canBreak = maxed && bkPt > 0 && S.money >= cost;
 
-  // 計算 Max 能升幾級
   let maxLevels = 0;
   if (maxed && bkPt > 0) {
     let tempLv = bkLv, tempMoney = S.money, tempBp = bkPt;
@@ -572,7 +570,6 @@ function renderBreakthroughSection() {
       </button>
     </div>`;
 
-  // 突破點兌換區
   if (bkPt >= 5) {
     html += `<div style="margin-top:12px;padding-top:10px;border-top:1px solid #2a2a3a;">
       <div class="subtitle" style="margin-bottom:8px;">── 突破點兌換 ──</div>
@@ -709,7 +706,7 @@ function abyssDeath() {
   const reward = S.abyssFloor * 50;
   S.money += reward;
   S.abyssBest = Math.max(S.abyssBest, S.abyssFloor);
-  log(`🌀 深淵挑戰結束（第 ${S.abyssFloor} 層），獲得 ${reward} 金幣。`,'lose');
+  log(`🌀 深淵挑戰結束（第 ${S.abyssFloor} 層），獲得 ${formatNumber(reward)} 金幣。`,'lose');
   S.abyssFloor = 0;
   S.inAbyss = false;
   S.hp = effMaxHp();
@@ -735,10 +732,10 @@ function goAdventure() {
   setTimeout(nextEncounter, 500);
 }
 function updateAdventureUI() {
-  $('advHp').textContent = `${Math.max(0,S.hp)}/${effMaxHp()}`;
-  $('advMoney').textContent = S.money;
-  $('advExp').textContent = `${S.exp}/${S.expNeeded}`;
-  $('advPotion').textContent = S.potion;
+  $('advHp').textContent = `${formatNumber(Math.max(0,S.hp))}/${formatNumber(effMaxHp())}`;
+  $('advMoney').textContent = formatNumber(S.money);
+  $('advExp').textContent = `${formatNumber(S.exp)}/${formatNumber(S.expNeeded)}`;
+  $('advPotion').textContent = formatNumber(S.potion);
 }
 function nextEncounter() {
   if (S.hp <= 0) { handleDeath(); return; }
@@ -896,19 +893,6 @@ function chooseJob(idx) {
   checkAchievements();
 }
 function cancelJobChange() { pendingJobChoices = []; renderJobChange(); }
-function recalcBaseStats() {
-  const role = ROLES[S.roleType];
-  for (const slot of ['weapon','armor','accessory']) applyEquipStats(S.equipment[slot], -1);
-  S.maxHp = role.hp;
-  S.atk = role.atk;
-  S.def = role.def;
-  S.atk += S.contractLevel * 250;
-  S.maxHp -= S.contractLevel * 100;
-  if (S.maxHp < 100) S.maxHp = 100;  // ★ 保護
-  for (const slot of ['weapon','armor','accessory']) applyEquipStats(S.equipment[slot], 1);
-  if (S.hp > effMaxHp()) S.hp = effMaxHp();
-  if (S.hp < 1) S.hp = 1;
-}
 
 // ── 武器合成 ──
 let forgeSelection = [];
@@ -1019,49 +1003,92 @@ function triggerRandomEvent() {
     case 1: { const heal=Math.floor(effMaxHp()*0.3); S.hp=Math.min(effMaxHp(),S.hp+heal); log(`發現生命藥水！回復 ${heal} HP。`,'win'); break; }
     case 2: { const dmg=10+2*S.level; S.hp-=dmg; log(`踩到毒箭陷阱！受到 ${dmg} 點傷害！`,'lose'); break; }
     case 3: { const gain=3*S.level; S.atk+=gain; log(`磨利了武器！攻擊力 +${gain}`,'win'); break; }
-    case 4: { const gain=Math.floor(50*(S.playexp/100)*S.level); S.exp+=gain; log(`撿到失傳卷軸！+${gain} 經驗。`,'win'); break; }
+    case 4: { const gain=Math.floor(50*(S.playexp/100)*S.level); S.exp+=gain; log(`撿到失傳卷軸！+${formatNumber(gain)} 經驗。`,'win'); break; }
     case 5: { S.playexp+=5; log(`受到高人指點！經驗加成提升至 ${S.playexp}%。`,'win'); break; }
-    case 6: { 
-      log('找到隱藏商店！','loot'); 
+    case 6: {
+      log('找到隱藏商店！','loot');
       if (typeof hiddinshop === 'function') {
-        hiddinshop(); 
+        hiddinshop();
       } else {
-        S.money+=100; S.potion++; 
+        S.money+=100; S.potion++;
       }
-      break; 
+      break;
     }
   }
   if (S.hp <= 0) S.hp = 0;
 }
 
-// 打開附魔畫面 (你可以直接加一個新函式)
+// ============================================================
+//  ★ 附魔系統（從裝備畫面進入）
+// ============================================================
 function openEnchant() {
   showScreen('screen-enchant');
+  renderEnchant();
+}
+
+function closeEnchant() {
+  showScreen('screen-equip');
+  renderEquip();
+}
+
+function renderEnchant() {
   const c = $('enchantContent');
-  const cost = 1000000; // 附魔花費 100 萬金幣
-  
-  let html = `<div class="subtitle" style="text-align:center;padding:10px;">為你的裝備隨機附魔（消耗 100 萬金幣）</div>`;
-  html += `<div class="actions"><button class="danger" onclick="doEnchant()">🔮 隨機附魔</button></div>`;
+  if (!c) return;
+  const weapon = S.equipment.weapon;
+
+  let html = `<div class="subtitle" style="text-align:center;padding:10px;">
+    為你的武器隨機附魔（消耗 100 萬金幣）
+  </div>`;
+
+  if (weapon) {
+    html += `<div class="equip-slot">
+      <span class="slot-name">武器</span>
+      <div style="flex:1;">
+        <div class="equip-item-name rarity-${weapon.rarity}">${weapon.name}
+          <span class="subtitle">[${RARITY[weapon.rarity].name}] Lv.${weapon.level}</span>
+        </div>
+        <div>${weapon.affixes.map(a => `<span class="equip-affix">${a.label}</span>`).join('')}</div>
+      </div>
+    </div>`;
+  } else {
+    html += `<div class="subtitle" style="text-align:center;color:#f44336;padding:12px;">
+      ⚠ 你沒有裝備武器，無法附魔
+    </div>`;
+  }
+
+  html += `<div class="subtitle" style="text-align:center;margin-top:10px;color:#ffd54f;">
+    目前金幣：${formatNumber(S.money)}
+  </div>`;
+
+  html += `<div class="actions" style="margin-top:12px;">
+    <button class="danger" ${weapon ? '' : 'disabled'} onclick="doEnchant()">🔮 隨機附魔（100 萬金）</button>
+    <button onclick="closeEnchant()">返回裝備</button>
+  </div>`;
+
   c.innerHTML = html;
 }
 
 function doEnchant() {
-  if (S.money < 1000000) { log('金幣不足，需要 100 萬金幣！', 'lose'); return; }
-  S.money -= 1000000;
-  
-  const stats = ['atk', 'def', 'hp', 'crit', 'critDmg'];
-  const pick = stats[rand(0, stats.length - 1)];
-  
-  // 給當前武器附魔
+  // ★ 先檢查，再扣錢
   if (!S.equipment.weapon) { log('你沒有裝備武器！', 'lose'); return; }
-  
-  if (pick === 'atk') S.equipment.weapon.affixes.push({stat:'atk',val:100,label:'附魔:攻擊+100'});
-  if (pick === 'def') S.equipment.weapon.affixes.push({stat:'def',val:50,label:'附魔:防禦+50'});
-  if (pick === 'hp') S.equipment.weapon.affixes.push({stat:'hp',val:500,label:'附魔:生命+500'});
-  if (pick === 'crit') S.equipment.weapon.affixes.push({stat:'crit',val:5,label:'附魔:爆擊+5%'});
-  if (pick === 'critDmg') S.equipment.weapon.affixes.push({stat:'critDmg',val:50,label:'附魔:爆傷+50%'});
-  
-  applyEquipStats(S.equipment.weapon, 1); // 立即套用新屬性
-  log(`🔮 附魔成功！你的武器獲得了新屬性。`, 'win');
-  renderEquip();
+  const cost = 1000000;
+  if (S.money < cost) { log('金幣不足，需要 100 萬金幣！', 'lose'); return; }
+
+  S.money -= cost;
+  const weapon = S.equipment.weapon;
+
+  const affixMap = [
+    { stat:'atk',     val:100, label:'附魔:攻擊 +100' },
+    { stat:'def',     val:50,  label:'附魔:防禦 +50' },
+    { stat:'hp',      val:500, label:'附魔:生命 +500' },
+    { stat:'crit',    val:5,   label:'附魔:爆擊 +5%' },
+    { stat:'critDmg', val:50,  label:'附魔:爆傷 +50%' },
+  ];
+  const a = affixMap[rand(0, affixMap.length - 1)];
+  weapon.affixes.push(a);
+  applyEquipStats(weapon, 1);
+
+  log(`🔮 附魔成功！武器獲得「${a.label}」`, 'win');
+  renderEnchant();
+  updateTownUI();
 }
