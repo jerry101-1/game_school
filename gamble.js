@@ -83,28 +83,82 @@ function clearGambleLog() {
 }
 
 // ══════════════════════════════════════════════════════════
-//  🎰 拉霸機
+//  🎰 拉霸機 (動畫版)
 // ══════════════════════════════════════════════════════════
+let isSpinning = false; // 防止玩家連點
+
 function openSlots() {
+  if (isSpinning) return;
   const cost = 1000;
   if (S.money < cost) { log('金幣不足！需要 1000 金。', 'lose'); return; }
 
   S.money -= cost;
+  isSpinning = true;
+
   const symbols = ['🍒','🍋','🔔','💎','7️⃣'];
   const weights = [40, 30, 15, 10, 5];
 
-  const spin = [];
+  // 先決定最終結果 (與原本邏輯一致)
+  const finalSpin = [];
   for (let i = 0; i < 3; i++) {
     let r = Math.random() * 100;
     let sum = 0;
     for (let j = 0; j < weights.length; j++) {
       sum += weights[j];
-      if (r < sum) { spin.push(symbols[j]); break; }
+      if (r < sum) { finalSpin.push(symbols[j]); break; }
     }
   }
 
+  // 繪製初始畫面
+  const c2 = $('gambleContent');
+  c2.innerHTML = `
+    <div style="text-align:center;padding:30px 10px;">
+      <div id="slotDisplay" style="font-size:4em;letter-spacing:20px;height:80px;">
+        🍒 🍒 🍒
+      </div>
+      <div id="slotMsg" style="margin-top:20px;font-size:1.3em;color:#ffd54f;height:30px;">
+        拉霸中...
+      </div>
+      <div id="slotReward" style="margin-top:10px;color:#ffd54f; height:20px;"></div>
+      <div class="actions" style="margin-top:20px;">
+        <button class="gold" id="btnSpinAgain" disabled onclick="openSlots()">再拉一次（1000 金）</button>
+        <button onclick="renderGamble()">返回賭場</button>
+      </div>
+    </div>
+  `;
+
+  const display = $('slotDisplay');
+  
+  // 動畫參數
+  let spinCount = 0;
+  const maxSpins = 20; // 總共閃爍幾次
+  const spinInterval = setInterval(() => {
+    spinCount++;
+    
+    // 隨機產生三個圖案
+    const r1 = symbols[rand(0, symbols.length - 1)];
+    const r2 = symbols[rand(0, symbols.length - 1)];
+    const r3 = symbols[rand(0, symbols.length - 1)];
+    
+    display.textContent = `${r1} ${r2} ${r3}`;
+
+    // 當達到次數上限，停止動畫並結算
+    if (spinCount >= maxSpins) {
+      clearInterval(spinInterval);
+      
+      // 最終顯示正確結果
+      display.textContent = `${finalSpin[0]} ${finalSpin[1]} ${finalSpin[2]}`;
+      
+      // 結算獎勵
+      settleSlots(finalSpin, cost);
+    }
+  }, 60); // 每 60 毫秒切換一次，產生殘影效果
+}
+
+function settleSlots(spin, cost) {
   let reward = 0, msg = '';
   const [a, b, c] = spin;
+
   if (a === b && b === c) {
     switch (a) {
       case '7️⃣': reward = cost * 50; msg = '🎉🎉🎉 三個 7！超級大獎 50 倍！'; break;
@@ -122,25 +176,26 @@ function openSlots() {
 
   S.money += reward;
 
-  const c2 = $('gambleContent');
-  c2.innerHTML = `
-    <div style="text-align:center;padding:30px 10px;">
-      <div style="font-size:4em;letter-spacing:20px;">${spin.join(' ')}</div>
-      <div style="margin-top:20px;font-size:1.3em;color:${reward > 0 ? '#4caf50' : '#f44336'};">
-        ${msg}
-      </div>
-      <div style="margin-top:10px;color:#ffd54f;">
-        ${reward > 0 ? `獲得 ${reward.toLocaleString()} 金幣！` : `損失 ${cost.toLocaleString()} 金幣`}
-      </div>
-      <div class="actions" style="margin-top:20px;">
-        <button class="gold" onclick="openSlots()">再拉一次（1000 金）</button>
-        <button onclick="renderGamble()">返回賭場</button>
-      </div>
-    </div>
-  `;
+  // 更新 UI
+  $('slotMsg').textContent = msg;
+  $('slotMsg').style.color = reward > 0 ? '#4caf50' : '#f44336';
+  $('slotReward').textContent = reward > 0 ? `獲得 ${formatNumber(reward)} 金幣！` : `損失 ${formatNumber(cost)} 金幣`;
+  
+  // 解鎖按鈕
+  const btn = $('btnSpinAgain');
+  if (btn) {
+    btn.disabled = false;
+    if (S.money < 1000) {
+      btn.textContent = '金幣不足';
+      btn.disabled = true;
+    }
+  }
 
+  // 紀錄與存檔
   gambleLog(`🎰 拉霸機：${spin.join(' ')}｜${reward > 0 ? '+' + reward : '-' + cost}`, reward > 0 ? 'win' : 'lose');
   updateTownUI();
+  
+  isSpinning = false; // 解除鎖定
 }
 
 // ══════════════════════════════════════════════════════════
