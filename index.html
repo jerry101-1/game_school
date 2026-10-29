@@ -10,8 +10,8 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
   import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-  import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-
+  import { getFirestore, doc, setDoc, getDoc, collection, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+  
   // ★ 這裡換成你剛剛複製的設定
   const firebaseConfig = {
     apiKey: "AIzaSyDWfubDQMjEtTTqjKuvuFugSF71PZrKvpM",
@@ -30,6 +30,7 @@
   // 將 Firebase 函式掛載到 window，讓 cloud.js 可以呼叫
   window.FB = {
     auth, db, doc, setDoc, getDoc,
+    collection, query, orderBy, limit, getDocs, // ★ 新增這行
     createUser: createUserWithEmailAndPassword,
     login: signInWithEmailAndPassword,
     logout: signOut,
