@@ -25,7 +25,7 @@
 
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
-  const db = getFirestore(app);
+  const db = getFirestore(app, "(default)");
 
   // 將 Firebase 函式掛載到 window，讓 cloud.js 可以呼叫
   window.FB = {
