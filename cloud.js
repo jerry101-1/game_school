@@ -202,3 +202,101 @@ setInterval(() => {
 }, 30000);
 
 function backToTown() { updateTownUI(); showScreen('screen-town'); }
+
+
+// ══════════════════════════════════════════════════════════
+//  雲端排行榜 (Firebase 版本)
+// ══════════════════════════════════════════════════════════
+async function openCloudLeaderboard() {
+  showScreen('screen-leaderboard');
+  const c = $('leaderboardContent');
+  c.innerHTML = `<div class="subtitle" style="text-align:center;padding:20px;">☁ 正在載入全球排行榜...</div>`;
+
+  if (!currentUser) {
+    c.innerHTML = `
+      <div class="subtitle" style="text-align:center;padding:20px;color:#f44336;">
+        ⚠️ 請先登入才能查看排行榜
+      </div>
+      <div class="actions" style="margin-top:10px;">
+        <button onclick="openCloud()">前往登入</button>
+        <button onclick="closeLeaderboard()">離開</button>
+      </div>
+    `;
+    return;
+  }
+
+  try {
+    // 抓取 leaderboard 集合，依照「等級」降冪排序，取前 10 名
+    const q = window.FB.query(
+      window.FB.collection(window.FB.db, 'leaderboard'),
+      window.FB.orderBy('level', 'desc'),
+      window.FB.limit(10)
+    );
+    const querySnapshot = await window.FB.getDocs(q);
+
+    if (querySnapshot.empty) {
+      c.innerHTML = `
+        <div class="subtitle" style="text-align:center;padding:20px;">目前還沒有任何紀錄，快去成為第一名吧！</div>
+        <div class="actions" style="margin-top:10px;">
+          <button onclick="closeLeaderboard()">離開</button>
+        </div>`;
+      return;
+    }
+
+    let html = `<div class="subtitle" style="text-align:center;padding:8px;">🏆 全服最高等級 Top 10</div>`;
+    
+    let rank = 1;
+    querySnapshot.forEach((doc) => {
+      const data = doc.data();
+      const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `#${rank}`;
+      const isMe = data.email === currentUser.email;
+      const color = isMe ? '#ffd54f' : (rank <= 3 ? '#4fc3f7' : '#ccc');
+      
+      html += `<div class="lb-row" style="${isMe ? 'border-color:#ffd54f;' : ''}">
+        <div class="lb-icon" style="color:${color};font-weight:bold;">${medal}</div>
+        <div class="lb-info">
+          <div class="lb-name" style="color:${color};">${data.name} ${isMe ? '(你)' : ''}</div>
+          <div class="lb-value">Lv.${formatNumber(data.level)}</div>
+        </div>
+      </div>`;
+      rank++;
+    });
+
+    html += `<div class="actions" style="margin-top:12px;">
+      <button class="gold" onclick="uploadToLeaderboard()">📤 更新我的排名</button>
+      <button onclick="openCloudLeaderboard()">🔄 重新整理</button>
+      <button onclick="closeLeaderboard()">離開</button>
+    </div>`;
+
+    c.innerHTML = html;
+  } catch (e) {
+    console.error('排行榜載入失敗', e);
+    c.innerHTML = `
+      <div class="subtitle" style="text-align:center;padding:20px;color:#f44336;">
+        ⚠️ 排行榜載入失敗<br><span style="font-size:11px;">${e.message}</span>
+      </div>
+      <div class="actions" style="margin-top:10px;">
+        <button onclick="closeLeaderboard()">離開</button>
+      </div>`;
+  }
+}
+
+async function uploadToLeaderboard() {
+  if (!currentUser) return;
+  try {
+    // 將玩家資料寫入 leaderboard 集合，文件 ID 用 UID 避免重複
+    await window.FB.setDoc(
+      window.FB.doc(window.FB.db, 'leaderboard', currentUser.uid),
+      {
+        name: S.playerName || '無名勇者',
+        email: currentUser.email,
+        level: S.level,
+        updatedAt: Date.now()
+      }
+    );
+    alert('📤 排名已更新！');
+    openCloudLeaderboard(); // 重新整理畫面
+  } catch (e) {
+    alert('更新失敗：' + e.message);
+  }
+}
