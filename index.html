@@ -6,31 +6,29 @@
 <title>⚔ RPG 冒險 ⚔</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚔️</text></svg>">
 <link rel="stylesheet" href="style.css">
-<!-- ★ Firebase 雲端設定 -->
+<!-- ★ Firebase Realtime Database 設定 -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
   import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-  import { getFirestore, doc, setDoc, getDoc, collection, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-  
-  // ★ 這裡換成你剛剛複製的設定
+  import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+
   const firebaseConfig = {
-    apiKey: "AIzaSyDWfubDQMjEtTTqjKuvuFugSF71PZrKvpM",
+    apiKey: "AIzaSyDwfubDQMiEtTtqjKuvuFugSF71PZrKvpM",
     authDomain: "rpg-game-54844.firebaseapp.com",
+    databaseURL: "https://rpg-game-54844-default-rtdb.firebaseio.com", // ★ 請換成你 Realtime Database 的網址
     projectId: "rpg-game-54844",
-    appId: "1:830888481205:web:b45a352b2f88db63ae49fc",
     storageBucket: "rpg-game-54844.firebasestorage.app",
-    messagingSenderId: "830888481205",    
+    messagingSenderId: "830888481205",
+    appId: "1:830888481205:web:b45a352b2f88db63ae49fc",
     measurementId: "G-FNX5VNX8M1"
   };
 
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
-  const db = getFirestore(app, "(default)");
+  const db = getDatabase(app); // ★ 改用 Realtime Database
 
-  // 將 Firebase 函式掛載到 window，讓 cloud.js 可以呼叫
   window.FB = {
-    auth, db, doc, setDoc, getDoc,
-    collection, query, orderBy, limit, getDocs, // ★ 新增這行
+    auth, db, ref, set, get, child,
     createUser: createUserWithEmailAndPassword,
     login: signInWithEmailAndPassword,
     logout: signOut,
