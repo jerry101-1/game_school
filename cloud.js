@@ -119,12 +119,13 @@ setInterval(() => { if (currentUser) saveToCloud(); }, 30000);
 function backToTown() { updateTownUI(); showScreen('screen-town'); }
 
 // ══════════════════════════════════════════════════════════
-//  雲端排行榜 (Realtime Database)
+//  雲端排行榜 (多分類版)
 // ══════════════════════════════════════════════════════════
 async function openCloudLeaderboard() {
   showScreen('screen-leaderboard');
   const c = $('leaderboardContent');
   c.innerHTML = `<div class="subtitle" style="text-align:center;padding:20px;">☁ 正在載入全球排行榜...</div>`;
+  
   if (!currentUser) {
     c.innerHTML = `<div class="subtitle" style="text-align:center;padding:20px;color:#f44336;">⚠️ 請先登入才能查看排行榜</div>
       <div class="actions" style="margin-top:10px;"><button onclick="openCloud()">前往登入</button><button onclick="closeLeaderboard()">離開</button></div>`;
@@ -135,26 +136,51 @@ async function openCloudLeaderboard() {
     const dbRef = window.FB.ref(window.FB.db);
     const snapshot = await window.FB.get(window.FB.child(dbRef, 'leaderboard'));
     
-    let html = `<div class="subtitle" style="text-align:center;padding:8px;">🏆 全服最高等級 Top 10</div>`;
+    let html = `<div class="subtitle" style="text-align:center;padding:8px;">🏆 全服排行榜</div>`;
     
     if (!snapshot.exists()) {
       html += `<div class="subtitle" style="text-align:center;padding:20px;">目前還沒有任何紀錄，快去成為第一名吧！</div>`;
     } else {
       const data = snapshot.val();
-      // 將物件轉為陣列並排序
-      const list = Object.values(data).sort((a, b) => b.level - a.level).slice(0, 10);
+      const allPlayers = Object.values(data);
       
-      list.forEach((p, i) => {
-        const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i+1}`;
-        const isMe = p.uid === currentUser.uid;
-        const color = isMe ? '#ffd54f' : (i < 3 ? '#4fc3f7' : '#ccc');
-        html += `<div class="lb-row" style="${isMe ? 'border-color:#ffd54f;' : ''}">
-          <div class="lb-icon" style="color:${color};font-weight:bold;">${medal}</div>
-          <div class="lb-info">
-            <div class="lb-name" style="color:${color};">${p.name} ${isMe ? '(你)' : ''}</div>
-            <div class="lb-value">Lv.${formatNumber(p.level)}</div>
-          </div>
-        </div>`;
+      // 定義要顯示的分類
+      const categories = [
+        { key: 'level', name: '最高等級', icon: '⭐', format: v => `Lv.${formatNumber(v)}` },
+        { key: 'atk', name: '最高攻擊力', icon: '⚔️', format: v => formatNumber(v) },
+        { key: 'maxHp', name: '最高 HP', icon: '🩷', format: v => formatNumber(v) },
+        { key: 'money', name: '最多金幣', icon: '💰', format: v => formatNumber(v) },
+        { key: 'abyssBest', name: '深淵最高層', icon: '🌀', format: v => `第 ${formatNumber(v)} 層` },
+        { key: 'killCount', name: '最多擊殺', icon: '💀', format: v => formatNumber(v) },
+        { key: 'maxCombo', name: '最高連擊', icon: '🔥', format: v => `${formatNumber(v)} 連擊` }
+      ];
+
+      categories.forEach(cat => {
+        // 依據不同屬性進行排序，取前 5 名
+        const sortedList = allPlayers
+          .filter(p => p[cat.key] !== undefined)
+          .sort((a, b) => b[cat.key] - a[cat.key])
+          .slice(0, 5); // 每個分類只顯示前 5 名，避免畫面太長
+
+        if (sortedList.length === 0) return;
+
+        html += `<div class="panel" style="margin:10px 0; padding:10px;">
+          <div class="panel-title" style="margin-bottom:6px;">${cat.icon} ${cat.name}</div>`;
+          
+        sortedList.forEach((p, i) => {
+          const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i+1}`;
+          const isMe = p.uid === currentUser.uid;
+          const color = isMe ? '#ffd54f' : (i < 3 ? '#4fc3f7' : '#ccc');
+          
+          html += `<div class="lb-row" style="padding:8px; margin:4px 0; ${isMe ? 'border-color:#ffd54f;' : ''}">
+            <div class="lb-icon" style="color:${color};font-weight:bold; min-width:30px;">${medal}</div>
+            <div class="lb-info">
+              <div class="lb-name" style="color:${color}; font-size:14px;">${p.name} ${isMe ? '(你)' : ''}</div>
+              <div class="lb-value" style="font-size:13px;">${cat.format(p[cat.key])}</div>
+            </div>
+          </div>`;
+        });
+        html += `</div>`;
       });
     }
 
@@ -175,10 +201,17 @@ async function openCloudLeaderboard() {
 async function uploadToLeaderboard() {
   if (!currentUser) return;
   try {
+    // 將玩家所有關鍵數據都上傳
     await window.FB.set(window.FB.ref(window.FB.db, 'leaderboard/' + currentUser.uid), {
       uid: currentUser.uid,
       name: S.playerName || '無名勇者',
       level: S.level,
+      atk: effAtk(),
+      maxHp: effMaxHp(),
+      money: S.money,
+      abyssBest: S.abyssBest,
+      killCount: S.killCount,
+      maxCombo: S.maxCombo,
       updatedAt: Date.now()
     });
     alert('📤 排名已更新！');
