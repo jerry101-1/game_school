@@ -674,58 +674,77 @@ function afterBattle() {
   if (S.inAbyss) { setTimeout(() => abyssNextFloor(), 600); return; }
   if (S.dungeon.active) { setTimeout(() => dungeonNextFloor(), 600); return; }
 
-  // 極速升級
+  // ==========================================
+  // ★ 終極防卡頓升級演算法 (批次計算)
+  // ==========================================
   let levelsGained = 0;
 
-  while (S.exp >= S.expNeeded) {
-    S.exp -= S.expNeeded;
-    S.level++;
-    levelsGained++;
-    S.expNeeded = Math.floor(100 * Math.pow(S.level, 1.5));
-
+  if (S.exp >= S.expNeeded) {
+    // 1. 先計算如果一次只升 1 級，大約會拿到多少屬性 (用目前的等級估算)
     const hpGain = 100 + S.level * 15;
     const atkGain = 8 + (S.roleType === 3 ? 6 : 3);
     const defGain = 3 + (S.roleType === 2 ? 4 : 1);
 
-    S.maxHp += hpGain;
-    S.atk += atkGain;
-    S.def += defGain;
+    // 2. 如果經驗值非常龐大，直接用「反推公式」算出可以升到幾級
+    // 升級公式是：expNeeded = floor(100 * level^1.5)
+    // 這裡假設玩家會一次升超過 100 級，我們就直接跳過迴圈，用數學估算
+    
+    if (S.exp > S.expNeeded * 50) { // 如果經驗夠升超過 50 級
+      // 用累積經驗公式反推大約等級 (粗略估算，保證不會卡死)
+      let estLevel = Math.floor(Math.pow(S.exp / 100, 1 / 1.5));
+      if (estLevel > S.level + 1) {
+        let jump = estLevel - S.level;
+        
+        // 直接套用屬性增長
+        S.maxHp += jump * (100 + estLevel * 15);
+        S.atk += jump * atkGain;
+        S.def += jump * defGain;
 
-    if (allTalentsMaxed()) {
-      S.breakthroughPoints = (S.breakthroughPoints || 0) + 1;
-    } else {
-      S.talentPoints++;
-    }
+        // 一次性發放天賦點
+        if (allTalentsMaxed()) {
+          S.breakthroughPoints = (S.breakthroughPoints || 0) + jump;
+        } else {
+          S.talentPoints += jump;
+        }
 
-    if (levelsGained >= 100) {
-      let remainingExp = S.exp;
-      let estLevel = S.level;
-      while (remainingExp >= Math.floor(100 * Math.pow(estLevel, 1.5))) {
-        remainingExp -= Math.floor(100 * Math.pow(estLevel, 1.5));
-        estLevel += 100;
-      }
-
-      const jumpLevels = estLevel - S.level;
-      if (jumpLevels > 0) {
-        S.maxHp += jumpLevels * (100 + estLevel * 15);
-        S.atk += jumpLevels * atkGain;
-        S.def += jumpLevels * defGain;
         S.level = estLevel;
-        S.exp = remainingExp;
+        S.exp = 0; // 剩餘零頭直接捨棄 (因為已經升到滿足為止)
         S.expNeeded = Math.floor(100 * Math.pow(S.level, 1.5));
-        if (allTalentsMaxed()) S.breakthroughPoints += jumpLevels;
-        else S.talentPoints += jumpLevels;
-        levelsGained += jumpLevels;
+        levelsGained = jump;
       }
-      break;
+    } 
+    
+    // 3. 如果經驗沒那麼多，或者是剛好升級，就用安全的迴圈（限制最多跑 100 次）
+    if (levelsGained === 0) {
+      let loopCount = 0;
+      while (S.exp >= S.expNeeded && loopCount < 100) {
+        S.exp -= S.expNeeded;
+        S.level++;
+        levelsGained++;
+        S.expNeeded = Math.floor(100 * Math.pow(S.level, 1.5));
+
+        S.maxHp += 100 + S.level * 15;
+        S.atk += 8 + (S.roleType === 3 ? 6 : 3);
+        S.def += 3 + (S.roleType === 2 ? 4 : 1);
+
+        if (allTalentsMaxed()) {
+          S.breakthroughPoints = (S.breakthroughPoints || 0) + 1;
+        } else {
+          S.talentPoints++;
+        }
+        loopCount++;
+      }
     }
   }
 
   if (levelsGained > 0) {
     S.hp = effMaxHp();
-    log(`★ 【等級提升】一口氣升了 ${levelsGained} 級！目前等級 Lv.${S.level}`, 'win');
+    log(`★ 【等級提升】一口氣升了 ${formatNumber(levelsGained)} 級！目前等級 Lv.${formatNumber(S.level)}`, 'win');
   }
 
+  // ==========================================
+  // 戰鬥後續處理 (維持不變)
+  // ==========================================
   if (S.isBossFight && S.monster && S.monster.hp <= 0) {
     S.chapter++;
     log(`★ 第 ${S.chapter-1} 章通關！進入第 ${S.chapter} 章！`,'win');
