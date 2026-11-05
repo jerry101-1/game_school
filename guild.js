@@ -4,8 +4,26 @@
 
 let guildTab = 'quests'; // 當前分頁：quests(任務) / skills(技能) / boss(世界王)
 
-function openGuild() { showScreen('screen-guild'); renderGuild(); }
+function openGuild() { 
+  showScreen('screen-guild'); 
+  checkDailyQuestReset(); // ★ 打開公會時檢查是否跨日
+  renderGuild(); 
+}
 function closeGuild() { updateTownUI(); showScreen('screen-town'); }
+
+// ★ 檢查並重置每日任務
+function checkDailyQuestReset() {
+  if (!S.guild.id) return;
+  const today = new Date().toLocaleDateString('zh-TW'); // 取得今天的日期字串 (例如 2026/11/5)
+  
+  // 如果沒有紀錄過日期，或者日期跟今天不一樣，就重置
+  if (S.guild.lastQuestReset !== today) {
+    S.guild.lastQuestReset = today;
+    S.guild.questProgress = {}; // 清空進度
+    S.guild.questClaimed = {};  // 清空領取狀態
+    log(`📋 公會每日任務已刷新！`, 'guild-text');
+  }
+}
 
 function renderGuild() {
   const c = $('guildContent');
