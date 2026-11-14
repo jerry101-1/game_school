@@ -666,14 +666,14 @@ function abyssEncounter() {
 function spawnAbyssMonster(floor) {
   const type = rand(1, 6);
   const base = MONSTERS[type];
-  const mult = 1 + floor * 0.25;
   const lv = Math.max(1, S.level + Math.floor(floor/3));
+  const floorMult = 1 + floor * 0.1;  // 深渊额外层数加成，改为较温和
   S.monster = {
     name:`[深淵${floor}F] ${base.name}`, skill:base.skill,
-    hp:Math.floor((base.hp + base.hp*0.3*lv) * mult),
-    atk:Math.floor((base.atk + base.atk*0.3*lv) * mult),
-    def:Math.floor((base.def + base.def*0.3*lv) * mult),
-    exp:Math.floor(base.exp*lv*mult), money:Math.floor(base.money*lv*mult),
+    hp:  Math.floor(base.hp  * Math.pow(lv, 1.4) * floorMult),
+    atk: Math.floor(base.atk * Math.pow(lv, 1.3) * floorMult),
+    def: Math.floor(base.def * Math.pow(lv, 1.2) * floorMult),
+    exp:Math.floor(base.exp*lv*floorMult), money:Math.floor(base.money*lv*floorMult),
     maxHp:0, lv, type, weak:base.weak, res:base.res, dodge:base.dodge,
     prefixType:0, prefix:"", isAbyss:true,
   };
@@ -688,20 +688,24 @@ function spawnAbyssMonster(floor) {
   }
   S.monster.maxHp = S.monster.hp;
 }
+
 function spawnAbyssBoss(floor) {
   const tier = Math.min(5, Math.floor(floor/10));
   const b = BOSSES[tier] || BOSSES[5];
-  const mult = 1 + floor * 0.15;
+  const floorMult = 1 + floor * 0.1;
   S.monster = {
     name:`[深淵${floor}F] ${b.name}`, skill:b.skill,
-    hp:Math.floor(b.hp*mult), atk:Math.floor(b.atk*mult),
-    def:Math.floor(b.def*mult), exp:Math.floor(b.exp*mult), money:Math.floor(b.money*mult),
+    hp:  Math.floor(b.hp  * Math.pow(S.level, 1.4) * floorMult),
+    atk: Math.floor(b.atk * Math.pow(S.level, 1.3) * floorMult),
+    def: Math.floor(b.def * Math.pow(S.level, 1.2) * floorMult),
+    exp:Math.floor(b.exp*S.level*floorMult), money:Math.floor(b.money*S.level*floorMult),
     maxHp:0, lv:S.level, type:100+tier, weak:b.weak, res:b.res, dodge:10,
     prefixType:0, prefix:"", isBoss:true, isAbyss:true,
     lines:b.lines || [],
   };
   S.monster.maxHp = S.monster.hp;
 }
+
 function abyssDeath() {
   const reward = S.abyssFloor * 50;
   S.money += reward;
@@ -758,16 +762,19 @@ function spawnMonster() {
   let tpl;
   if (S.level >= 50 && type === 7) {
     tpl = {name:"【最終魔王】毀滅之龍",skill:"吐出終結一切的黑炎！",
-      hp:5000+1000*lv,atk:300+80*lv,def:150+100*lv,exp:20000,money:50000,weak:3,res:1,dodge:0};
+      hp: Math.floor(5000 * Math.pow(lv, 1.4)),
+      atk: Math.floor(300 * Math.pow(lv, 1.3)),
+      def: Math.floor(150 * Math.pow(lv, 1.2)),
+      exp: 20000, money: 50000, weak:3, res:1, dodge:0};
   } else {
     const base = MONSTERS[type];
     tpl = {
-      name:base.name, skill:base.skill,
-      hp:base.hp + Math.floor(base.hp*0.3)*lv,
-      atk:base.atk + Math.floor(base.atk*0.3)*lv,
-      def:base.def + Math.floor(base.def*0.3)*lv,
-      exp:base.exp*lv, money:base.money*lv,
-      weak:base.weak, res:base.res, dodge:base.dodge,
+      name: base.name, skill: base.skill,
+      hp:  Math.floor(base.hp  * Math.pow(lv, 1.4)),
+      atk: Math.floor(base.atk * Math.pow(lv, 1.3)),
+      def: Math.floor(base.def * Math.pow(lv, 1.2)),
+      exp: base.exp * lv, money: base.money * lv,
+      weak: base.weak, res: base.res, dodge: base.dodge,
     };
   }
   let prefixType = 0, prefix = "";
@@ -786,9 +793,9 @@ function spawnBoss(ch) {
   const lv = Math.max(1, ch * 10);
   S.monster = {
     name:b.name, skill:b.skill,
-    hp:b.hp + Math.floor(b.hp*0.1)*lv,
-    atk:b.atk + b.atk*0.1*lv,
-    def:b.def + b.def*0.1*lv,
+    hp:  Math.floor(b.hp  * Math.pow(lv, 1.4)),
+    atk: Math.floor(b.atk * Math.pow(lv, 1.3)),
+    def: Math.floor(b.def * Math.pow(lv, 1.2)),
     exp:b.exp*lv, money:b.money*lv,
     maxHp:0, lv, type:100+ch, weak:b.weak, res:b.res, dodge:10,
     prefixType:0, prefix:"", isBoss:true,
