@@ -733,11 +733,6 @@ function afterBattle() {
     return;
   }
 
-  if (S.returnTo3D) {
-    returnToTown();
-    return;
-  }
-
   if (S.hp < effMaxHp() * 0.2) {
     log(`⚠ 血量過低，自動返回村莊。`, 'lose');
     setTimeout(() => returnToTown(), 800);
