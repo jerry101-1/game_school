@@ -765,15 +765,6 @@ function returnToTown() {
   updateTownUI();
   saveGame();
 
-  // ★ 3D 回歸：交給 3dworld.js 的專用函式
-  if (S.returnTo3D) {
-    S.returnTo3D = false;
-    if (typeof resume3DAfterBattle === 'function') {
-      resume3DAfterBattle();
-      return;
-    }
-  }
-
   showScreen('screen-town');
   log('你回到了村莊。','system');
 }
