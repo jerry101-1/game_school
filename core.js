@@ -65,8 +65,6 @@ const S = {
   ascendAtkBonus: 0,
   ascendDropBonus: 0,
 
-  // ★ 3D 回歸旗標
-  returnTo3D: false,
 };
 
 // ── DOM 工具 ──
