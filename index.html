@@ -375,24 +375,6 @@
   </div>
 </div>
 
-<!-- 3D 場景容器 -->
-<div id="canvas3d" class="hidden" style="position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:1000;"></div>
-
-<!-- 3D UI 提示 -->
-<div id="ui3d" class="hidden" style="position:fixed; top:20px; left:20px; z-index:1001; color:white; text-shadow:1px 1px 2px black; pointer-events:none;">
-  <h2>🌲 3D 荒野探索</h2>
-  <p>滑鼠點擊草地移動</p>
-  <p>靠近怪物觸發戰鬥</p>
-</div>
-
-<!-- 3D 戰鬥提示 -->
-<div id="combat-ui3d" style="display:none; position:fixed; bottom:20px; left:20px; z-index:1001; color:#fff; text-shadow:1px 1px 2px #000;">
-  <div id="combat-monster-name"></div>
-</div>
-
-<!-- 3D 返回按鈕 -->
-<button id="btnExit3d" class="hidden" onclick="exit3DExplore()" style="position:fixed; top:20px; right:20px; z-index:1001; padding:10px; background:#c62828; color:white; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">🏘️ 返回村莊</button>
-
 <!-- 戰鬥 -->
 <div id="screen-battle" class="panel hidden">
   <div class="panel-title">🧙 你（<span id="battleRole"></span> Lv.<span id="battleLevel"></span>）
@@ -471,9 +453,6 @@
 <script src="cloud.js"></script>
 <script src="rebirth.js"></script>
 <script src="patchnotes.js"></script>
-<!-- ★ 3D 載入區（使用 CDN 全域變數，勿再加 importmap） -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="3dworld.js"></script>
 <script src="realm.js"></script>
 </body>
 </html>
