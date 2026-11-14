@@ -11,7 +11,7 @@ function saveToCloud() {
 
 function saveGame() {
   try {
-    const save = {...S, monster:null, inBattle:false, gameOver:false, returnTo3D:false};
+    const save = {...S, monster:null, inBattle:false, gameOver:false};
     localStorage.setItem(SAVE_KEY, JSON.stringify(save));
     log('【系統】遊戲已存檔。', 'system');
   } catch(e) { log('【系統】存檔失敗。', 'lose'); }
