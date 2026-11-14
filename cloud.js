@@ -73,7 +73,7 @@ async function doLogout() {
 async function saveToCloud() {
   if (!currentUser) return false;
   try {
-    const saveData = {...S, monster:null, inBattle:false, gameOver:false, returnTo3D:false};
+    const saveData = {...S, monster:null, inBattle:false, gameOver:false};
     await window.FB.set(window.FB.ref(window.FB.db, 'users/' + currentUser.uid), saveData);
     console.log('☁ 已上傳至雲端');
     lastSyncStatus = '已同步'; lastSyncTime = Date.now(); updateSyncIndicator();
