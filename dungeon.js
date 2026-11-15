@@ -66,14 +66,13 @@ function dungeonEncounter() {
 
 function spawnDungeonMonster(d, floor) {
   const base = MONSTERS[d.monsterType];
-  const mult = d.mult * (1 + floor * 0.1);
   const lv = Math.max(1, S.level + floor);
   S.monster = {
     name:`[副本${floor}F] ${base.name}`, skill:base.skill,
-    hp:Math.floor((base.hp + base.hp*0.3*lv) * mult),
-    atk:Math.floor((base.atk + base.atk*0.3*lv) * mult),
-    def:Math.floor((base.def + base.def*0.3*lv) * mult),
-    exp:Math.floor(base.exp*lv*mult), money:Math.floor(base.money*lv*mult),
+    hp:  Math.floor(base.hp  * Math.pow(lv, 1.4) * d.mult),
+    atk: Math.floor(base.atk * Math.pow(lv, 1.3) * d.mult),
+    def: Math.floor(base.def * Math.pow(lv, 1.2) * d.mult),
+    exp:Math.floor(base.exp*lv*d.mult), money:Math.floor(base.money*lv*d.mult),
     maxHp:0, lv, type:d.monsterType, weak:base.weak, res:base.res, dodge:base.dodge,
     prefixType:0, prefix:"", isDungeon:true,
   };
@@ -86,15 +85,16 @@ function spawnDungeonBoss(d, floor) {
   const mult = d.mult * 2;
   S.monster = {
     name:`[副本BOSS] ${b.name}`, skill:b.skill,
-    hp:Math.floor(b.hp * mult), atk:Math.floor(b.atk * mult),
-    def:Math.floor(b.def * mult), exp:Math.floor(b.exp * mult), money:Math.floor(b.money * mult),
+    hp:  Math.floor(b.hp  * Math.pow(S.level, 1.4) * mult),
+    atk: Math.floor(b.atk * Math.pow(S.level, 1.3) * mult),
+    def: Math.floor(b.def * Math.pow(S.level, 1.2) * mult),
+    exp:Math.floor(b.exp*mult), money:Math.floor(b.money*mult),
     maxHp:0, lv:S.level, type:100+tier, weak:b.weak, res:b.res, dodge:10,
     prefixType:0, prefix:"", isBoss:true, isDungeon:true,
     lines:b.lines || [],
   };
   S.monster.maxHp = S.monster.hp;
 }
-
 function dungeonNextFloor() {
   const d = DUNGEONS[S.dungeon.active];
   if (!d) return;
