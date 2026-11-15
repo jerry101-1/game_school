@@ -294,12 +294,17 @@ function playerAction(action) {
   else if (action === 3) {
     if (roll(20)) { log(`【全力一擊】MISS！`,'lose'); pDmg = 0; }
     else {
-      pDmg = Math.round(effAtk()*effAtk() / (effAtk()+m.def) * 1.5);
+      const atkVal2 = effAtk();
+      const effectiveDef2 = Math.max(m.def, atkVal2 * 0.25);
+      pDmg = Math.round(atkVal2 * atkVal2 / (atkVal2 + effectiveDef2) * 1.5);
       log(`【全力一擊】全力揮出！`,'system');
     }
   }
   else {
-    pDmg = Math.round(effAtk()*effAtk() / (effAtk()+m.def));
+    // ★ 防御下限：至少保留攻击力 25% 的有效防御，防止无视防御秒杀
+    const atkVal = effAtk();
+    const effectiveDef = Math.max(m.def, atkVal * 0.25);
+    pDmg = Math.round(atkVal * atkVal / (atkVal + effectiveDef));
   }
 
   const tal = getTalentBonus();
@@ -692,15 +697,18 @@ function afterBattle() {
     if (estLevel > S.level) {
       levelsGained = estLevel - S.level;
       
-      // 2. 計算升級帶來的屬性 (用平均值估算，避免迴圈)
+      // 2. 計算升級帶來的屬性（★ 稀釋：改用平方根稀釋高級成長）
       const avgLevel = (S.level + estLevel) / 2;
-      const hpGain = (100 + avgLevel * 15) * levelsGained;
+      // 用 sqrt(avgLevel) 代替 avgLevel，讓高級時每級屬性成長變慢
+      const hpGain  = (100 + Math.sqrt(avgLevel) * 30) * levelsGained;
       const atkGain = (8 + (S.roleType === 3 ? 6 : 3)) * levelsGained;
       const defGain = (3 + (S.roleType === 2 ? 4 : 1)) * levelsGained;
 
-      S.maxHp += hpGain;
-      S.atk += atkGain;
-      S.def += defGain;
+      // ★ 高級時屬性質成長進一步壓制
+      const levelDamp = 1 / (1 + Math.log10(1 + avgLevel / 100));
+      S.maxHp += Math.floor(hpGain  * levelDamp);
+      S.atk   += Math.floor(atkGain * levelDamp);
+      S.def   += Math.floor(defGain * levelDamp);
 
       // 3. 發放天賦點或突破點
       if (allTalentsMaxed()) {
@@ -714,7 +722,6 @@ function afterBattle() {
       S.exp = 0; // 剩下的零頭直接當作溢出捨棄
       S.expNeeded = Math.floor(100 * Math.pow(S.level, 1.5));
     }
-  }
 
   if (levelsGained > 0) {
     S.hp = effMaxHp();
