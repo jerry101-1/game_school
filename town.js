@@ -795,7 +795,7 @@ function spawnBoss(ch) {
     name:b.name, skill:b.skill,
     hp:  Math.floor(b.hp  * Math.pow(lv, 1.4)),
     atk: Math.floor(b.atk * Math.pow(lv, 1.3)),
-    def: Math.floor(b.def * Math.pow(lv, 1.2)),
+    def: Math.floor(b.def * Math.pow(lv, 0.8)),
     exp:b.exp*lv, money:b.money*lv,
     maxHp:0, lv, type:100+ch, weak:b.weak, res:b.res, dodge:10,
     prefixType:0, prefix:"", isBoss:true,
