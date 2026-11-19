@@ -722,6 +722,7 @@ function afterBattle() {
       S.exp = 0; // 剩下的零頭直接當作溢出捨棄
       S.expNeeded = Math.floor(100 * Math.pow(S.level, 1.5));
     }
+  }
 
   if (levelsGained > 0) {
     S.hp = effMaxHp();
