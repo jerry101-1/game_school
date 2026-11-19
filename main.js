@@ -92,3 +92,26 @@ document.addEventListener('keydown', e => {
   // ★ 啟動自動同步
   if (typeof startAutoSync === 'function') startAutoSync();
 })();
+
+function resetGame() {
+  if (!confirm('確定要重置遊戲嗎？\n\n⚠️ 這會刪除本機存檔，所有進度將消失！')) return;
+  if (!confirm('再次確認：你確定要放棄一切重新開始嗎？')) return;
+
+  // 1. 清除本地存檔
+  localStorage.removeItem(SAVE_KEY);
+
+  // 2. 如果有登入 Firebase，詢問是否同步清除雲端 (可選)
+  if (typeof currentUser !== 'undefined' && currentUser) {
+    if (confirm('你已登入雲端。是否也要刪除雲端存檔？（若不刪除，下次登入可能會自動載入舊進度）')) {
+      // 這裡調用 Firebase 的 remove API (假設你在 cloud.js 有暴露)
+      if (window.FB && window.FB.set) {
+        window.FB.set(window.FB.ref(window.FB.db, 'users/' + currentUser.uid), null)
+          .then(() => console.log('雲端存檔已刪除'))
+          .catch(e => console.error('雲端刪除失敗', e));
+      }
+    }
+  }
+
+  // 3. 重新載入網頁
+  location.reload();
+}
