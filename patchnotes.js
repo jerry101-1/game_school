@@ -19,7 +19,7 @@ function renderPatchNotes() {
   const notes = [
     {
       version: 'v1.6.2',
-      date: '2026-11-21', // 可改成你今天的日期
+      date: '2026-11-21',
       color: '#ff5252',
       changes: [
         '⚖️ 後期數值平衡重構：怪物 HP / 攻擊 / 防禦 改為指數成長，解決後期玩家一擊秒殺怪物失去樂趣的問題。',
