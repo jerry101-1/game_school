@@ -15,9 +15,20 @@ function closePatchNotes() {
 function renderPatchNotes() {
   const c = document.getElementById('patchContent');
   if (!c) return;
-
-  // ★ 在這裡維護更新紀錄（第一筆視為最新版本）
+  
   const notes = [
+    {
+      version: 'v1.6.2',
+      date: '2026-11-21', // 可改成你今天的日期
+      color: '#ff5252',
+      changes: [
+        '⚖️ 後期數值平衡重構：怪物 HP / 攻擊 / 防禦 改為指數成長，解決後期玩家一擊秒殺怪物失去樂趣的問題。',
+        '🛡️ 傷害公式優化：加入「防禦下限」機制（至少保留攻擊力 10% 的有效防禦），避免完全無視防禦的刮痧或秒殺。',
+        '📈 升級成長稀釋：玩家升級獲得的基礎屬性加入對數稀釋（Level Damp），防止等級爆炸導致的數值通膨。',
+        '🐛 修復 `battle.js` 語法錯誤導致的 `startBattle is not defined` 卡死問題。',
+        '🗑️ 系統選單新增「重置遊戲」按鈕，可一鍵清除本地存檔重新開始。',
+      ]
+    },
     {
       version: 'v1.6.1',
       date: '2026-10-25',
