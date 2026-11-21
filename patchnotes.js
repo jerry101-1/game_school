@@ -57,7 +57,7 @@ function renderPatchNotes() {
     },
     {
       version: 'v1.5.2',
-      date: '2026-10-20',
+      date: '2026-10-17',
       color: '#4fc6b2',
       changes: [
         '📈 優化按鈕與寶箱判斷'
